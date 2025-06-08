@@ -37,7 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'buque_app',
+    'viaje_app',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -74,10 +77,15 @@ WSGI_APPLICATION = 'naviera_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pruebas',
+        'USER': 'postgres',
+        'PASSWORD': 'admin21003',
+        'HOST': 'localhost',  
+        'PORT': '5432',
     }
 }
+
 
 
 # Password validation

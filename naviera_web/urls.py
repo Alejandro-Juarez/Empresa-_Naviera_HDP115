@@ -14,9 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+# Proyecto_Empresa_Naviera/urls.py (tu archivo actual)
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),          # Mapea /admin/
+    path('buques/', include('buque_app.urls')), # Mapea /buques/ y todo lo que esté dentro de buque_app.urls
+    path('viajes/', include('viajes_app.urls')), # <--- ¡AÑADE ESTA LÍNEA!
+    # Puedes cambiar 'viajes/' a '' si quieres que viajes_app sea la aplicación principal por defecto
+    # path('', include('viajes_app.urls')), # Si quieres que viaje_app se cargue en la raíz
 ]
+

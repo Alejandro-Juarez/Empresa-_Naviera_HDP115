@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Viajes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1400px; /* Un poco más ancho para más columnas */
+        }
+        .left-panel, .right-panel {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .left-panel { flex: 0.5; min-width: 300px; } /* Panel izquierdo un poco más estrecho */
+        .right-panel { flex: 1.5; } /* Panel derecho más ancho para la tabla */
+
+        .left-panel h2, .right-panel h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"], /* Nuevo tipo de input */
+        .form-group select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        /* Oculta las flechas de incremento/decremento en navegadores WebKit (Chrome, Safari) */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Para Firefox */
+            appearance: textfield; /* Estándar */
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas pequeñas */
+        }
+        .buttons-container button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            flex-grow: 1; /* Permite que los botones se expandan */
+            min-width: 120px; /* Ancho mínimo para los botones */
+        }
+        #registerViajeBtn { background-color: #28a745; } /* Verde */
+        #saveChangesBtn { background-color: #007bff; display: none; } /* Azul */
+        #deleteViajeBtn { background-color: #dc3545; display: none; } /* Rojo */
+        #addInventarioBtn { background-color: #ffc107; color: #333; } /* Amarillo/Naranja */
+
+        .right-panel .search-bar {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        .right-panel .search-bar input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px; /* Cambiado a rounded completo */
+        }
+        .right-panel .search-bar button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px; /* Cambiado a rounded completo */
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table thead th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        table tbody td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        table tbody tr:hover {
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        /* Estilo para la fila seleccionada */
+        .selected-row {
+            background-color: #e0f7fa !important; /* Un color más claro para resaltar */
+            border: 1px solid #00bcd4; /* Borde para el resaltado */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h2>Detalles del Viaje</h2>
+            <div class="form-group">
+                <label for="viajeCodigo">Código:</label>
+                <input type="number" id="viajeCodigo">
+            </div>
+            <div class="form-group">
+                <label for="viajeBuque">Buque asignado (Matrícula):</label>
+                <select id="viajeBuque">
+                    <option value="">Cargando buques...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="viajeFechaInicio">Fecha de inicio:</label>
+                <input type="date" id="viajeFechaInicio">
+            </div>
+            <div class="form-group">
+                <label for="viajeFechaFin">Fecha de fin:</label>
+                <input type="date" id="viajeFechaFin">
+            </div>
+            <div class="form-group">
+                <label for="viajeDestino">Destino:</label>
+                <input type="text" id="viajeDestino">
+            </div>
+            <div class="form-group">
+                <label for="viajeEstado">Estado:</label>
+                <select id="viajeEstado">
+                    <option value="">Cargando estados...</option>
+                </select>
+            </div>
+            <!-- Campo de Inventario ELIMINADO de aquí -->
+
+            <div class="buttons-container">
+                <button id="registerViajeBtn">Registrar viaje</button>
+                <button id="saveChangesBtn">Guardar cambios</button>
+                <button id="deleteViajeBtn">Eliminar viaje</button>
+                <button id="addInventarioBtn">Añadir inventario</button> <!-- Botón se mantiene -->
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2>Listado de Viajes</h2>
+            <div class="search-bar">
+                <input type="text" id="searchCodigo" placeholder="Buscar por Código">
+                <button id="searchBtn">Buscar</button>
+            </div>
+            <div id="viajeTableContainer">
+                <table id="viajeTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Buque</th>
+                            <th>Fecha inicio</th>
+                            <th>Fecha fin</th>
+                            <th>Destino</th>
+                            <th>Estado</th>
+                            <!-- Columna de Inventario ELIMINADA de aquí -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos de los viajes se insertarán aquí con JavaScript -->
+                    </tbody>
+                </table>
+                <p id="noViajesMessage" class="no-data">No hay viajes registrados.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // 1. Obtención de Elementos del DOM (Referencia a los elementos HTML)
+        // ----------------------------------------------------
+        const viajeCodigoInput = document.getElementById('viajeCodigo');
+        const viajeBuqueSelect = document.getElementById('viajeBuque');
+        const viajeFechaInicioInput = document.getElementById('viajeFechaInicio');
+        const viajeFechaFinInput = document.getElementById('viajeFechaFin');
+        const viajeDestinoInput = document.getElementById('viajeDestino');
+        const viajeEstadoSelect = document.getElementById('viajeEstado');
+        // const viajeInventarioSelect = document.getElementById('viajeInventario'); // ELIMINADO
+
+        const registerViajeBtn = document.getElementById('registerViajeBtn');
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const deleteViajeBtn = document.getElementById('deleteViajeBtn');
+        const addInventarioBtn = document.getElementById('addInventarioBtn'); // Botón se mantiene
+
+        const viajeTableBody = document.querySelector('#viajeTableContainer tbody');
+        const noViajesMessage = document.getElementById('noViajesMessage');
+        const viajeTable = document.querySelector('#viajeTableContainer table');
+
+        const searchCodigoInput = document.getElementById('searchCodigo');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // Estado local para el viaje seleccionado (ahora almacenaremos el código y el elemento TR)
+        let selectedViajeCodigo = null;
+        let selectedRowElement = null;
+
+        // Base URL de tu API (ajusta si tu proyecto está en otro prefijo, ej. '/api' si es la raíz)
+        const API_BASE_URL = '/viajes_app/api'; // Por defecto, usaremos '/viajes_app/api'
+
+
+        // ----------------------------------------------------
+        // 2. Funciones de Utilidad y UI
+        // ----------------------------------------------------
+
+        // Función para limpiar el formulario y restablecer el estado de selección
+        function clearForm() {
+            viajeCodigoInput.value = '';
+            viajeBuqueSelect.value = '';
+            viajeFechaInicioInput.value = '';
+            viajeFechaFinInput.value = '';
+            viajeDestinoInput.value = '';
+            viajeEstadoSelect.value = '';
+            // viajeInventarioSelect.value = ''; // ELIMINADO
+
+            selectedViajeCodigo = null;
+            if (selectedRowElement) {
+                selectedRowElement.classList.remove('selected-row');
+                selectedRowElement = null;
+            }
+            resetButtons();
+        }
+
+        // Función para restablecer los botones a su estado inicial (Registrar visible, otros ocultos)
+        function resetButtons() {
+            registerViajeBtn.style.display = 'inline-block';
+            saveChangesBtn.style.display = 'none';
+            deleteViajeBtn.style.display = 'none';
+            // El botón Añadir Inventario siempre visible
+            addInventarioBtn.style.display = 'inline-block';
+            viajeCodigoInput.readOnly = false; // Permitir editar el código para nuevos registros
+        }
+
+        // Función para cambiar los botones a modo edición (Registrar oculto, otros visibles)
+        function setEditButtons() {
+            registerViajeBtn.style.display = 'none';
+            saveChangesBtn.style.display = 'inline-block';
+            deleteViajeBtn.style.display = 'inline-block';
+            addInventarioBtn.style.display = 'inline-block'; // Siempre visible
+            viajeCodigoInput.readOnly = true; // Bloquear edición del código en modo edición
+        }
+
+        // Muestra un mensaje de alerta (ejemplo simple)
+        function showMessage(message, isError = false) {
+            alert(message);
+            if (isError) {
+                console.error("ERROR: ", message);
+            } else {
+                console.log("INFO: ", message);
+            }
+        }
+
+        // Formatear una fecha de 'YYYY-MM-DD' a 'DD/MM/YYYY' (opcional para visualización)
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return '';
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+
+        // ----------------------------------------------------
+        // 3. Funciones de Interacción con la API (AJAX con fetch)
+        // ----------------------------------------------------
+
+        // Obtener y renderizar todos los viajes
+        async function fetchAndRenderViajes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/viajes/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const viajes = await response.json();
+                renderTable(viajes);
+            } catch (error) {
+                showMessage(`Error al cargar viajes: ${error.message}. Asegúrate de que el servidor Django esté corriendo y las URLs sean correctas.`, true);
+            }
+        }
+
+        // Obtener y poblar el select de buques
+        async function populateBuques() {
+            try {
+                // Usamos la API de buques de la aplicación buque_app.
+                // Ajusta la URL si tu buque_app tiene un prefijo diferente.
+                const response = await fetch(`/buques/api/buques/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const buques = await response.json();
+
+                viajeBuqueSelect.innerHTML = '<option value="">Seleccione un buque</option>';
+                buques.forEach(buque => {
+                    const option = document.createElement('option');
+                    option.value = buque.id; // Usamos el ID del buque
+                    option.textContent = `${buque.nombre} (${buque.matricula})`; // Nombre y matrícula
+                    viajeBuqueSelect.appendChild(option);
+                });
+            } catch (error) {
+                showMessage(`Error al cargar buques: ${error.message}. Verifica la URL de la API de buques.`, true);
+            }
+        }
+
+        // Obtener y poblar el select de estados de viaje
+        async function populateEstadosViaje() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/estados-viaje/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const estados = await response.json();
+
+                viajeEstadoSelect.innerHTML = '<option value="">Seleccione un estado</option>';
+                estados.forEach(estado => {
+                    const option = document.createElement('option');
+                    option.value = estado.id; // Usamos el ID del estado
+                    option.textContent = estado.nombre; // El nombre del estado
+                    viajeEstadoSelect.appendChild(option);
+                });
+            } catch (error) {
+                showMessage(`Error al cargar estados de viaje: ${error.message}. Verifica la URL de la API de estados.`, true);
+            }
+        }
+
+        // populateInventarios() y relacionados ELIMINADO
+
+
+        // Renderiza la tabla de viajes con los datos recibidos de la API
+        function renderTable(viajes) {
+            viajeTableBody.innerHTML = ''; // Limpiar tabla
+            if (viajes.length === 0) {
+                noViajesMessage.style.display = 'block';
+                viajeTable.style.display = 'none';
+            } else {
+                noViajesMessage.style.display = 'none';
+                viajeTable.style.display = 'table';
+                viajes.forEach(viaje => {
+                    const row = document.createElement('tr');
+                    row.dataset.codigo = viaje.codigo_viaje; // Almacenar el código de viaje para selección
+                    row.innerHTML = `
+                        <td>${viaje.codigo_viaje}</td>
+                        <td>${viaje.buque_nombre} (${viaje.buque_matricula})</td>
+                        <td>${formatDateForDisplay(viaje.fecha_inicio)}</td>
+                        <td>${formatDateForDisplay(viaje.fecha_fin)}</td>
+                        <td>${viaje.destino}</td>
+                        <td>${viaje.estado_nombre}</td>
+                        <!-- Columna de Inventario ELIMINADA de aquí -->
+                    `;
+                    row.addEventListener('click', () => selectRow(row));
+                    viajeTableBody.appendChild(row);
+                });
+            }
+            clearForm(); // Siempre limpiar formulario después de renderizar tabla
+        }
+
+        // Selecciona una fila, obtiene los detalles del viaje de la API y rellena el formulario
+        async function selectRow(row) {
+            if (selectedRowElement) {
+                selectedRowElement.classList.remove('selected-row');
+            }
+            selectedRowElement = row;
+            selectedRowElement.classList.add('selected-row');
+
+            selectedViajeCodigo = row.dataset.codigo; // Obtener el código de viaje de la fila
+
+            try {
+                // Hacer una solicitud GET a la API para obtener los detalles del viaje
+                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const viaje = await response.json();
+
+                // Rellenar los campos del formulario con los detalles del viaje
+                viajeCodigoInput.value = viaje.codigo_viaje;
+                viajeBuqueSelect.value = viaje.buque_id;
+                viajeFechaInicioInput.value = viaje.fecha_inicio; // Formato YYYY-MM-DD
+                viajeFechaFinInput.value = viaje.fecha_fin;     // Formato YYYY-MM-DD
+                viajeDestinoInput.value = viaje.destino;
+                viajeEstadoSelect.value = viaje.estado_id;
+                // viajeInventarioSelect.value = viaje.inventario_id; // ELIMINADO
+
+                setEditButtons(); // Cambiar los botones a modo edición
+            } catch (error) {
+                showMessage(`Error al cargar detalles del viaje: ${error.message}`, true);
+                clearForm(); // Limpiar el formulario si falla la carga
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // 4. Manejadores de Eventos (Botones y Búsqueda)
+        // ----------------------------------------------------
+
+        // Manejador para el botón "Registrar viaje"
+        registerViajeBtn.addEventListener('click', async () => {
+            const codigo_viaje = viajeCodigoInput.value.trim();
+            const id_buque = viajeBuqueSelect.value;
+            const fecha_inicio = viajeFechaInicioInput.value;
+            const fecha_fin = viajeFechaFinInput.value;
+            const destino = viajeDestinoInput.value.trim();
+            const id_estado = viajeEstadoSelect.value;
+            // const id_inventario = viajeInventarioSelect.value; // ELIMINADO
+
+            // Validaciones básicas del lado del cliente
+            if (!codigo_viaje || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) { // id_inventario ELIMINADO
+                showMessage('Por favor, complete todos los campos.', true);
+                return;
+            }
+
+            // Convertir el código de viaje a número (si es necesario para la API)
+            const codigoViajeNumerico = parseInt(codigo_viaje);
+            if (isNaN(codigoViajeNumerico)) {
+                showMessage('El código de viaje debe ser un número.', true);
+                return;
+            }
+
+            // Datos a enviar al backend en formato JSON
+            const dataToSend = {
+                codigo_viaje: codigoViajeNumerico,
+                id_buque: id_buque, // Enviamos el ID del buque
+                fecha_inicio: fecha_inicio,
+                fecha_fin: fecha_fin,
+                destino: destino,
+                id_estado: id_estado, // Enviamos el ID del estado
+                // id_inventario: id_inventario, // ELIMINADO
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/viajes/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'X-CSRFToken': getCookie('csrftoken'), // Descomentar en producción
+                    },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage('Viaje registrado exitosamente.');
+                    fetchAndRenderViajes(); // Recargar la tabla
+                } else {
+                    let errorMessage = 'Error al registrar viaje.';
+                    if (result.codigo_viaje && result.codigo_viaje.includes('already exists.')) {
+                        errorMessage = 'Ya existe un viaje con este código.';
+                    } else {
+                        errorMessage += ' Detalles: ' + JSON.stringify(result);
+                    }
+                    showMessage(errorMessage, true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al registrar viaje: ${error.message}.`, true);
+            }
+        });
+
+
+        // Manejador para el botón "Guardar cambios"
+        saveChangesBtn.addEventListener('click', async () => {
+            if (!selectedViajeCodigo) {
+                showMessage('Ningún viaje seleccionado para guardar cambios.', true);
+                return;
+            }
+
+            const codigo_viaje = viajeCodigoInput.value.trim(); // Se usa para identificar
+            const id_buque = viajeBuqueSelect.value;
+            const fecha_inicio = viajeFechaInicioInput.value;
+            const fecha_fin = viajeFechaFinInput.value;
+            const destino = viajeDestinoInput.value.trim();
+            const id_estado = viajeEstadoSelect.value;
+            // const id_inventario = viajeInventarioSelect.value; // ELIMINADO
+
+            // Validaciones básicas del lado del cliente
+            if (!codigo_viaje || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) { // id_inventario ELIMINADO
+                showMessage('Por favor, complete todos los campos.', true);
+                return;
+            }
+            const codigoViajeNumerico = parseInt(codigo_viaje);
+            if (isNaN(codigoViajeNumerico)) {
+                showMessage('El código de viaje debe ser un número.', true);
+                return;
+            }
+
+            // Datos a enviar al backend
+            const dataToSend = {
+                codigo_viaje: codigoViajeNumerico,
+                id_buque: id_buque,
+                fecha_inicio: fecha_inicio,
+                fecha_fin: fecha_fin,
+                destino: destino,
+                id_estado: id_estado,
+                // id_inventario: id_inventario, // ELIMINADO
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage('Cambios guardados exitosamente.');
+                    fetchAndRenderViajes(); // Recargar la tabla
+                } else {
+                    showMessage('Error al guardar cambios. Detalles: ' + JSON.stringify(result), true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al guardar cambios: ${error.message}.`, true);
+            }
+        });
+
+
+        // Manejador para el botón "Eliminar viaje"
+        deleteViajeBtn.addEventListener('click', async () => {
+            if (!selectedViajeCodigo) {
+                showMessage('Ningún viaje seleccionado para eliminar.', true);
+                return;
+            }
+
+            if (!confirm(`¿Está seguro de que desea eliminar el viaje con código ${selectedViajeCodigo}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        // 'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                });
+
+                if (response.ok) {
+                    showMessage('Viaje eliminado exitosamente.');
+                    fetchAndRenderViajes(); // Recargar la tabla
+                } else {
+                    const result = await response.json();
+                    showMessage('Error al eliminar viaje. Detalles: ' + JSON.stringify(result), true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al eliminar viaje: ${error.message}.`, true);
+            }
+        });
+
+
+        // Manejador para el botón "Añadir inventario" (solo una alerta por ahora)
+        addInventarioBtn.addEventListener('click', () => {
+            // Aquí puedes redirigir a la nueva aplicación 'inventario_app'
+            // Por ejemplo, si inventario_app está en /inventario_app/
+            // window.location.href = '/inventario_app/';
+            showMessage('Función "Añadir inventario" pendiente de implementar. ¡Redirigirá a la aplicación de inventario!');
+        });
+
+
+        // Manejador para el botón "Buscar" (Filtra la tabla localmente por código)
+        searchBtn.addEventListener('click', () => {
+            const searchTerm = searchCodigoInput.value.trim().toLowerCase();
+            const rows = viajeTableBody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const codigoCellContent = row.children[0].textContent.trim().toLowerCase(); // El código está en la primera celda
+                if (codigoCellContent.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Opcional: Función para obtener el token CSRF de las cookies (necesario para producción)
+        // function getCookie(name) { ... }
+
+
+        // ----------------------------------------------------
+        // 5. Inicialización de la Aplicación (Cuando la página carga)
+        // ----------------------------------------------------
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar los selects de Foreign Key primero
+            populateBuques();
+            populateEstadosViaje();
+            // populateInventarios(); // ELIMINADO
+
+            // Luego, cargar y renderizar los viajes existentes
+            fetchAndRenderViajes();
+        });
+
+    </script>
+</body>
+</html>
