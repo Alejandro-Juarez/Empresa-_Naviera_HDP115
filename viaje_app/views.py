@@ -1,3 +1,4 @@
+# viaje_app/views.py
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
@@ -5,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json # Para manejar JSON en request.body
 
 # Importamos los modelos de esta aplicación.
-# Asegúrate de que TipoBuque y Buque estén correctamente definidos en viajes_app/models.py
+# Asegúrate de que TipoBuque y Buque estén correctamente definidos en viaje_app/models.py
 # o importados desde buque_app.models si los compartes.
 from .models import Viaje, EstadoViaje, Buque # Importamos Buque también para FK
 
@@ -17,7 +18,8 @@ def viajes_app_view(request):
     Renderiza la plantilla HTML principal de la aplicación de viajes.
     Esta vista no maneja la lógica de la API, solo sirve la página.
     """
-    return render(request, 'viajes_app/viaje_list.html', {})
+    # CORRECCIÓN: Se asegura que la ruta de la plantilla usa 'viaje_app' (singular)
+    return render(request, 'viaje_app/viaje_list.html', {})
 
 # ----------------------------------------------------
 # API para Viajes (CRUD)
@@ -40,15 +42,15 @@ def viaje_api(request, codigo_viaje_param=None):
                 # Usamos el campo 'codigo_viaje' para buscar, ya que es el identificador único en el frontend
                 viaje = Viaje.objects.get(codigo_viaje=codigo_viaje_param)
                 data = {
-                    'id': viaje.id_viaje, # Usamos id_viaje como el ID único de DB
+                    'id': viaje.id_viaje, # Acceder al PK de Viaje usando .id_viaje
                     'codigo_viaje': viaje.codigo_viaje,
-                    'buque_id': viaje.id_buque.id_buque, # ID del buque
+                    'buque_id': viaje.id_buque.id_buque, # Acceder al PK de Buque usando .id_buque
                     'buque_nombre': viaje.id_buque.nombre, # Nombre del buque
                     'buque_matricula': viaje.id_buque.matricula, # Matrícula del buque
                     'fecha_inicio': viaje.fecha_inicio.strftime('%Y-%m-%d'), # Formato de fecha para JS
                     'fecha_fin': viaje.fecha_fin.strftime('%Y-%m-%d'),       # Formato de fecha para JS
                     'destino': viaje.destino,
-                    'estado_id': viaje.id_estado.id_estado, # ID del estado
+                    'estado_id': viaje.id_estado.id_estado, # Acceder al PK de EstadoViaje usando .id_estado
                     'estado_nombre': viaje.id_estado.estado_viaje, # Nombre del estado
                 }
                 return JsonResponse(data)
@@ -59,15 +61,15 @@ def viaje_api(request, codigo_viaje_param=None):
             viajes_data = []
             for viaje in viajes:
                 viajes_data.append({
-                    'id': viaje.id_viaje,
+                    'id': viaje.id_viaje, # Acceder al PK de Viaje usando .id_viaje
                     'codigo_viaje': viaje.codigo_viaje,
-                    'buque_id': viaje.id_buque.id_buque,
+                    'buque_id': viaje.id_buque.id_buque, # Acceder al PK de Buque usando .id_buque
                     'buque_nombre': viaje.id_buque.nombre,
                     'buque_matricula': viaje.id_buque.matricula,
                     'fecha_inicio': viaje.fecha_inicio.strftime('%Y-%m-%d'),
                     'fecha_fin': viaje.fecha_fin.strftime('%Y-%m-%d'),
                     'destino': viaje.destino,
-                    'estado_id': viaje.id_estado.id_estado,
+                    'estado_id': viaje.id_estado.id_estado, # Acceder al PK de EstadoViaje usando .id_estado
                     'estado_nombre': viaje.id_estado.estado_viaje,
                 })
             return JsonResponse(viajes_data, safe=False) # safe=False para arrays
@@ -80,22 +82,23 @@ def viaje_api(request, codigo_viaje_param=None):
             return JsonResponse({'error': 'JSON inválido en el cuerpo de la solicitud.'}, status=400)
 
         # Usamos el ModelForm para validar y guardar
-        from .forms import ViajeForm # Importamos aquí para evitar import circular en la parte superior
+        # Importamos aquí para evitar import circular en la parte superior
+        from .forms import ViajeForm 
         form = ViajeForm(data)
 
         if form.is_valid():
             # El form.save() manejará la creación de la instancia y las FKs
             viaje = form.save()
             return JsonResponse({
-                'id': viaje.id_viaje,
+                'id': viaje.id_viaje, # Acceder al PK de Viaje usando .id_viaje
                 'codigo_viaje': viaje.codigo_viaje,
-                'buque_id': viaje.id_buque.id_buque,
+                'buque_id': viaje.id_buque.id_buque, # Acceder al PK de Buque usando .id_buque
                 'buque_nombre': viaje.id_buque.nombre,
                 'buque_matricula': viaje.id_buque.matricula,
                 'fecha_inicio': viaje.fecha_inicio.strftime('%Y-%m-%d'),
                 'fecha_fin': viaje.fecha_fin.strftime('%Y-%m-%d'),
                 'destino': viaje.destino,
-                'estado_id': viaje.id_estado.id_estado,
+                'estado_id': viaje.id_estado.id_estado, # Acceder al PK de EstadoViaje usando .id_estado
                 'estado_nombre': viaje.id_estado.estado_viaje,
             }, status=201) # 201 Created
         else:
@@ -121,15 +124,15 @@ def viaje_api(request, codigo_viaje_param=None):
         if form.is_valid():
             viaje = form.save()
             return JsonResponse({
-                'id': viaje.id_viaje,
+                'id': viaje.id_viaje, # Acceder al PK de Viaje usando .id_viaje
                 'codigo_viaje': viaje.codigo_viaje,
-                'buque_id': viaje.id_buque.id_buque,
+                'buque_id': viaje.id_buque.id_buque, # Acceder al PK de Buque usando .id_buque
                 'buque_nombre': viaje.id_buque.nombre,
                 'buque_matricula': viaje.id_buque.matricula,
                 'fecha_inicio': viaje.fecha_inicio.strftime('%Y-%m-%d'),
                 'fecha_fin': viaje.fecha_fin.strftime('%Y-%m-%d'),
                 'destino': viaje.destino,
-                'estado_id': viaje.id_estado.id_estado,
+                'estado_id': viaje.id_estado.id_estado, # Acceder al PK de EstadoViaje usando .id_estado
                 'estado_nombre': viaje.id_estado.estado_viaje,
             })
         else:
@@ -165,7 +168,7 @@ def estado_viaje_list_api(request):
         estados_data = []
         for estado in estados:
             estados_data.append({
-                'id': estado.id_estado, # Usamos id_estado como PK
+                'id': estado.id_estado, # Acceder al PK de EstadoViaje usando .id_estado
                 'nombre': estado.estado_viaje
             })
         return JsonResponse(estados_data, safe=False)
@@ -173,12 +176,9 @@ def estado_viaje_list_api(request):
     return JsonResponse({'error': 'Método HTTP no permitido.'}, status=405)
 
 # ----------------------------------------------------
-# API para Listar Buques (para el select del frontend en viajes_app)
+# API para Listar Buques (para el select del frontend en viaje_app)
 # (Se reutiliza la API de buque_app, pero aquí se define una local si se necesita)
 # ----------------------------------------------------
-# NOTA: Tu HTML de viajes_app ya está configurado para llamar a la API de buques_app
-# en /buques/api/buques/. Si quieres que viajes_app use sus propios modelos de Buque
-# definidos en viajes_app/models.py, puedes usar esta vista:
 @csrf_exempt
 def buque_list_api_for_viajes(request):
     """
@@ -190,10 +190,11 @@ def buque_list_api_for_viajes(request):
         buques_data = []
         for buque in buques:
             buques_data.append({
-                'id': buque.id_buque, # Usamos id_buque como PK
+                'id': buque.id_buque, # Acceder al PK de Buque usando .id_buque
                 'nombre': buque.nombre,
                 'matricula': buque.matricula,
             })
         return JsonResponse(buques_data, safe=False)
     
     return JsonResponse({'error': 'Método HTTP no permitido.'}, status=405)
+
