@@ -3,107 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <title>Gestión de Inventario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      background-color: #f4f4f4;
     }
-   
-    form button {
-  display: block;
-  margin: 10px auto 0 auto;  /* top, right, bottom, left */
-  padding: 10px 20px;
-  font-size: 16px;
-}
-  
-
-    .data-grid th:nth-child(1),
-.data-grid td:nth-child(1) {
-  width: 60%;
-}
-
-.data-grid th:nth-child(2),
-.data-grid td:nth-child(2) {
-  width: 10%;
-}
-
-.data-grid th:nth-child(3),
-.data-grid td:nth-child(3) {
-  width: 10%;
-}
-
-.data-grid th:nth-child(4),
-.data-grid td:nth-child(4) {
-  width: 20%;
-}
 
     .container {
       display: flex;
-      margin-top: 5vh;
-      margin-left: 5vw;
-      margin-right: 5vw;
-      height: 85vh;
-      border: 1px solid #ccc;
+      gap: 20px;
+      background-color: #fff;
+      padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: white;
+      width: 90%;
+      max-width: 1200px;
     }
 
-    .left-panel {
-      width: 21%;
-      background-color: #f0f0f0;
-      padding: 20px;
-      border-right: 1px solid #ccc;
-      box-sizing: border-box;
+    .left-panel, .right-panel {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
     }
 
-.right-panel {
-  width: 100%;
-  padding: 20px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
 
     label {
       display: block;
+      margin-bottom: 5px;
       font-weight: bold;
       margin-top: 15px;
-      margin-bottom: 5px;
     }
 
     input[type="text"],
     select,
     input[type="file"] {
-      width: 100%;
-      padding: 8px;
-      font-size: 16px;
+      width: calc(100% - 22px);
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
       margin-bottom: 10px;
-      box-sizing: border-box;
     }
 
-    button {
+    img#preview-imagen {
+      margin: 10px auto 0 auto;
+      max-height: 350px;
+      max-width: 320px;
+      border: 1px solid #ccc;
+      display: block;
+    }
+
+    .register-button,
+    form button[type="submit"] {
       padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
       font-size: 16px;
+      color: white;
+      background-color: #28a745;
+      margin-top: 10px;
+    }
+
+    .right-panel .search-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .right-panel .search-controls input[type="text"] {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .right-panel .search-controls button {
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
       cursor: pointer;
     }
 
-    /* Estilo para DataGrid */
-    .data-grid {
-  width: 100%;
-  table-layout: fixed; /* para que los % en columnas se respeten */
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
 
-    .data-grid th,
-    .data-grid td {
-      border: 1px solid #ccc;
-      padding: 8px;
+    table thead th {
+      background-color: #f2f2f2;
+      padding: 10px;
+      border: 1px solid #ddd;
       text-align: left;
     }
 
-    .data-grid th {
+    table tbody td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    table tbody tr:hover {
       background-color: #f9f9f9;
+      cursor: pointer;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      color: #888;
     }
 
     .data-grid img {
@@ -112,24 +137,14 @@
       display: block;
     }
 
-.table-wrapper {
-  flex-grow: 1;
-  overflow-y: auto;
-  overflow-x: hidden;    
-  margin: 0;              
-  padding-right: 5%;      
-}
-
-    .register-button {
-      align-self: flex-end;
-      padding: 10px 20px;
-      font-size: 16px;
+    .table-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
     }
- </style>
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- Panel Izquierdo -->
     <div class="left-panel">
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -155,24 +170,20 @@
 
         <label for="imagen">Subir imagen:</label>
         <input type="file" id="imagen" name="imagen" accept="image/*" />
-
-        <img id="preview-imagen"
-             style="margin: 10px auto 0 auto; max-height: 350px; max-width: 320px; border: 1px solid #ccc; display: block;" />
+        <img id="preview-imagen" />
 
         <button class="register-button">Registrar Producto</button>
         <button type="submit">Guardar</button>
       </form>
     </div>
 
-    <!-- Panel Derecho -->
     <div class="right-panel">
       <h2>Gestión de Productos</h2>
-
-      <div class="search-controls" style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+      <div class="search-controls">
         <span>Nombre del producto:</span>
-        <input type="text" id="txtBuscarProducto" name="txtBuscarProducto" style="padding: 5px; font-size: 16px;" />
+        <input type="text" id="txtBuscarProducto" name="txtBuscarProducto" />
         <button type="submit" formmethod="get">Buscar</button>
-        <button type="button">Eliminar</button>
+        <button type="button" style="background-color: #dc3545;">Eliminar</button>
       </div>
 
       <div class="table-wrapper">
@@ -201,7 +212,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="4">No hay productos disponibles.</td>
+                <td colspan="4" class="no-data">No hay productos disponibles.</td>
               </tr>
             {% endfor %}
           </tbody>
