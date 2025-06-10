@@ -11,6 +11,9 @@ class TipoBuque(models.Model):
         verbose_name_plural = "Tipos de Buque"
         ordering = ['tipo_buque']
 
+    def __str__(self):
+        return self.tipo_buque
+
 
 class Buque(models.Model):
     id_buque = models.AutoField(db_column='id_buque', primary_key=True)
@@ -26,6 +29,9 @@ class Buque(models.Model):
         verbose_name_plural = "Buques"
         ordering = ['nombre_buque']
 
+    def __str__(self):
+        return f"{self.nombre_buque} ({self.matricula})"
+
 
 class CategoriaProducto(models.Model):
     id_categoria = models.AutoField(db_column='id_categoria', primary_key=True)
@@ -37,6 +43,9 @@ class CategoriaProducto(models.Model):
         verbose_name = "Categoría de Producto"
         verbose_name_plural = "Categorías de Producto"
         ordering = ['nombre_categoria']
+
+    def __str__(self):
+        return self.nombre_categoria
 
 
 class EstadoViaje(models.Model):
@@ -50,6 +59,9 @@ class EstadoViaje(models.Model):
         verbose_name_plural = "Estados del Viaje"
         ordering = ['id_estado']
 
+    def __str__(self):
+        return self.estado_viaje
+
 
 class UnidadMedida(models.Model):
     id_unidad_medida = models.AutoField(db_column='id_unidad_medida', primary_key=True)
@@ -61,6 +73,9 @@ class UnidadMedida(models.Model):
         verbose_name = "Unidad de Medida"
         verbose_name_plural = "Unidades de Medida"
         ordering = ['nombre_unidad_medida']
+
+    def __str__(self):
+        return self.nombre_unidad_medida
 
 
 class Producto(models.Model):
@@ -76,6 +91,9 @@ class Producto(models.Model):
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
         ordering = ['nombre_producto']
+
+    def __str__(self):
+        return self.nombre_producto
 
 
 class Viaje(models.Model):
@@ -94,6 +112,9 @@ class Viaje(models.Model):
         verbose_name_plural = "Viajes"
         ordering = ['fecha_inicio']
 
+    def __str__(self):
+        return f"Viaje {self.codigo_viaje} - {self.destino}"
+
 
 class Inventario(models.Model):
     id_inventario = models.AutoField(db_column='id_inventario', primary_key=True)
@@ -108,3 +129,6 @@ class Inventario(models.Model):
         verbose_name = "Inventario"
         verbose_name_plural = "Inventarios"
         ordering = ['id_viaje', 'id_producto']
+
+    def __str__(self):
+        return f"{self.id_producto} en viaje {self.id_viaje}"
