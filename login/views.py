@@ -24,8 +24,5 @@ def logout_view(request):
     logout(request)
     return redirect("login.html")
 
-def administrador_view(request):
-    return render(request, "administrador.html")
-
 def RegistroConsumo(request):
     return render(request, "RegistroConsumo.html")

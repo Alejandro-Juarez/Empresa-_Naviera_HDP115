@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'buque_app',
     'viaje_app',
-    'login'
+    'login',
+    'administrador_app'
 
 ]
 
