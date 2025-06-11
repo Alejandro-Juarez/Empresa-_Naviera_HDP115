@@ -36,8 +36,7 @@ def gestion_productos(request):
             id_unidad_medida_id=unidad,
             url_foto=url_foto
         )
-
-    return render(request, 'gestion_productos.html', {
+    return render(request, 'productos_app/gestion_productos.html', {
         'productos': productos,
         'categorias': categorias,
         'unidades': unidades,
