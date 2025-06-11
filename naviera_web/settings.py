@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'buque_app',
     'productos_app',
     'viaje_app',
+    'inventario_app',
     'login',
     'administrador_app',
     'consumo_app',
