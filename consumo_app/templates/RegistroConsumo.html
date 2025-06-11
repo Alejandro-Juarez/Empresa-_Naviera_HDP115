@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Consumo</title>
+        <style>
+        {% include "RegistroConsumo.css" %}
+    </style>
+</head>
+<body>
+    <header>
+        <h2>Registro de Consumo</h2>
+        <button class="home-btn">Inicio</button>
+    </header>
+
+    <main class="container">
+        <section class="selector-viaje">
+            <label for="viaje">Viaje (Código):</label>
+            <select id="viaje" name="viaje">
+                <option value="PRV001">PRV001</option>
+                <option value="PRV002">PRV002</option>
+                <option value="PRV003">PRV003</option>
+            </select>
+        </section>
+        
+        <section class="registro-form">
+            <label for="categoria">Categoría:</label>
+            <select id="categoria" name="categoria">
+                <option value="Provisiones">Provisiones</option>
+                <option value="Repuestos">Repuestos</option>
+            </select>
+
+            <label for="producto">Seleccione el producto:</label>
+            <select id="producto" name="producto">
+                <option value="arroz">Arroz</option>
+                <option value="maiz">Maíz</option>
+                <option value="agua">Agua</option>
+            </select>
+
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" id="cantidad" name="cantidad" min="1" value="1">
+
+            <div class="form-buttons">
+                <button type="button" id="registrar">Registrar Consumo</button>
+                <button type="button" id="editar">Editar</button>
+            </div>
+        </section>
+
+        <section class="tabla-inventario">
+            <h3>Inventario general del viaje</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Producto</th>
+                        <th>Cantidad actual</th>
+                        <th>Nivel mínimo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Provisiones</td>
+                        <td>Arroz</td>
+                        <td>120</td>
+                        <td>50</td>
+                    </tr>
+                    <!-- Puedes reemplazar esto con un bucle Django más adelante -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>
