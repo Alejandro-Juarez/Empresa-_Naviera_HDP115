@@ -19,10 +19,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),          # Mapea /admin/
-    path('buques/', include('buque_app.urls')), # Mapea /buques/ y todo lo que esté dentro de buque_app.urls
-    path('viajes/', include('viaje_app.urls')), # <--- ¡AÑADE ESTA LÍNEA!
-    # Puedes cambiar 'viajes/' a '' si quieres que viajes_app sea la aplicación principal por defecto
-    # path('', include('viajes_app.urls')), # Si quieres que viaje_app se cargue en la raíz
+    path('admin/', admin.site.urls),
+    path('login/', include('login.urls')),      
+    path('buques/', include('buque_app.urls')),
+    path('viajes/', include('viaje_app.urls')),
+
 ]
 
