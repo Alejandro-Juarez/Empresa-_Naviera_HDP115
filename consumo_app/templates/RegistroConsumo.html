@@ -3,71 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <title>Registro de Consumo</title>
-        <style>
-        {% include "RegistroConsumo.css" %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .product-image {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+        .low-stock {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: #e0f7fa;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h2>Registro de Consumo</h2>
-        <button class="home-btn">Inicio</button>
-    </header>
+    <h1>Registro de Consumo</h1>
+    
+    <div>
+        <label for="viaje-select"><strong>Viaje (Código):</strong></label>
+        <select id="viaje-select">
+    <option value="">Seleccione un viaje</option>
+    {% for viaje in viajes %}
+        <option value="{{ viaje.id_viaje }}">{{ viaje.codigo_viaje }}</option>
+    {% endfor %}
+</select>
+    </div>
 
-    <main class="container">
-        <section class="selector-viaje">
-            <label for="viaje">Viaje (Código):</label>
-            <select id="viaje" name="viaje">
-                <option value="PRV001">PRV001</option>
-                <option value="PRV002">PRV002</option>
-                <option value="PRV003">PRV003</option>
-            </select>
-        </section>
-        
-        <section class="registro-form">
-            <label for="categoria">Categoría:</label>
-            <select id="categoria" name="categoria">
-                <option value="Provisiones">Provisiones</option>
-                <option value="Repuestos">Repuestos</option>
-            </select>
-
-            <label for="producto">Seleccione el producto:</label>
-            <select id="producto" name="producto">
-                <option value="arroz">Arroz</option>
-                <option value="maiz">Maíz</option>
-                <option value="agua">Agua</option>
-            </select>
-
-            <label for="cantidad">Cantidad:</label>
-            <input type="number" id="cantidad" name="cantidad" min="1" value="1">
-
-            <div class="form-buttons">
-                <button type="button" id="registrar">Registrar Consumo</button>
-                <button type="button" id="editar">Editar</button>
+    <div style="display: flex; margin-top: 20px; gap: 20px;">
+        <div style="flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            <h3>Detalles del Consumo</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="categoria"><strong>Categoría:</strong></label>
+                <input type="text" id="categoria" class="form-control" readonly>
             </div>
-        </section>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="producto"><strong>Producto:</strong></label>
+                <input type="text" id="producto" class="form-control" readonly>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="cantidad"><strong>Cantidad a consumir:</strong></label>
+                <input type="number" id="cantidad" class="form-control" value="1" min="1">
+            </div>
+            
+            <input type="hidden" id="inventario-id">
+            
+            <button id="registrar" class="btn btn-primary" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Registrar Consumo
+            </button>
+        </div>
 
-        <section class="tabla-inventario">
-            <h3>Inventario general del viaje</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Categoría</th>
-                        <th>Producto</th>
-                        <th>Cantidad actual</th>
-                        <th>Nivel mínimo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Provisiones</td>
-                        <td>Arroz</td>
-                        <td>120</td>
-                        <td>50</td>
-                    </tr>
-                    <!-- Puedes reemplazar esto con un bucle Django más adelante -->
-                </tbody>
-            </table>
-        </section>
-    </main>
+        <div style="flex: 2; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            <h3>Inventario del Viaje Seleccionado</h3>
+            <div style="overflow-x: auto;">
+                <table id="tabla-inventario">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Nivel Mínimo</th>
+                            <th>Foto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Seleccione un viaje para ver el inventario</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+$(document).ready(function() {
+    $('#viaje-select').change(function() {
+        const idViaje = $(this).val();
+        const tabla = $('#tabla-inventario tbody');
+        
+        if (!idViaje) {
+            tabla.html('<tr><td colspan="5">Seleccione un viaje</td></tr>');
+            return;
+        }
+        
+        tabla.html('<tr><td colspan="5">Cargando inventario...</td></tr>');
+        
+        $.ajax({
+            url: `/consumo/obtener_inventario/${idViaje}/`,
+            method: 'GET',
+            success: function(data) {
+                if (data.error) {
+                    tabla.html(`<tr><td colspan="5" class="error">${data.error}</td></tr>`);
+                    return;
+                }
+                
+                if (data.inventario.length === 0) {
+                    tabla.html('<tr><td colspan="5">No hay productos en el inventario para este viaje</td></tr>');
+                    return;
+                }
+                
+                let html = '';
+                data.inventario.forEach(item => {
+                    html += `
+                    <tr data-id="${item.id}" 
+                        data-categoria="${item.categoria}"
+                        data-producto="${item.producto}"
+                        data-cantidad="${item.cantidad}">
+                        <td>${item.categoria}</td>
+                        <td>${item.producto}</td>
+                        <td>${item.cantidad}</td>
+                        <td>${item.nivel_minimo}</td>
+                        <td><img src="${item.foto}" width="50" height="50" alt="${item.producto}"></td>
+                    </tr>`;
+                });
+                
+                tabla.html(html);
+            },
+            error: function(xhr) {
+                console.error("Error en AJAX:", xhr.responseText);
+                tabla.html('<tr><td colspan="5">Error al cargar el inventario. Consulte la consola.</td></tr>');
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
