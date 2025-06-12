@@ -5,6 +5,11 @@
     <title>Registro de Consumo</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
         .product-image {
             max-width: 50px;
             max-height: 50px;
@@ -17,11 +22,15 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 10px;
         }
         th, td {
-            padding: 8px;
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
         }
         tr:hover {
             background-color: #f5f5f5;
@@ -29,6 +38,60 @@
         }
         .selected {
             background-color: #e0f7fa;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .flex-container {
+            display: flex;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .flex-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .flex-1 {
+            flex: 1;
+        }
+        .flex-2 {
+            flex: 2;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -38,40 +101,42 @@
     <div>
         <label for="viaje-select"><strong>Viaje (Código):</strong></label>
         <select id="viaje-select">
-    <option value="">Seleccione un viaje</option>
-    {% for viaje in viajes %}
-        <option value="{{ viaje.id_viaje }}">{{ viaje.codigo_viaje }}</option>
-    {% endfor %}
-</select>
+            <option value="">Seleccione un viaje</option>
+            {% for viaje in viajes %}
+                <option value="{{ viaje.id_viaje }}">{{ viaje.codigo_viaje }}</option>
+            {% endfor %}
+        </select>
     </div>
 
-    <div style="display: flex; margin-top: 20px; gap: 20px;">
-        <div style="flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+    <div class="flex-container">
+        <div class="flex-item flex-1">
             <h3>Detalles del Consumo</h3>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label for="categoria"><strong>Categoría:</strong></label>
                 <input type="text" id="categoria" class="form-control" readonly>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label for="producto"><strong>Producto:</strong></label>
                 <input type="text" id="producto" class="form-control" readonly>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label for="cantidad"><strong>Cantidad a consumir:</strong></label>
                 <input type="number" id="cantidad" class="form-control" value="1" min="1">
+                <small id="cantidad-disponible" style="color: #666;"></small>
             </div>
             
             <input type="hidden" id="inventario-id">
             
-            <button id="registrar" class="btn btn-primary" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <button id="registrar" class="btn-primary">
                 Registrar Consumo
             </button>
+            <div id="mensaje" style="margin-top: 10px;"></div>
         </div>
 
-        <div style="flex: 2; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <div class="flex-item flex-2">
             <h3>Inventario del Viaje Seleccionado</h3>
             <div style="overflow-x: auto;">
                 <table id="tabla-inventario">
@@ -95,56 +160,155 @@
     </div>
 
     <script>
-$(document).ready(function() {
-    $('#viaje-select').change(function() {
-        const idViaje = $(this).val();
-        const tabla = $('#tabla-inventario tbody');
-        
-        if (!idViaje) {
-            tabla.html('<tr><td colspan="5">Seleccione un viaje</td></tr>');
-            return;
-        }
-        
-        tabla.html('<tr><td colspan="5">Cargando inventario...</td></tr>');
-        
-        $.ajax({
-            url: `/consumo/obtener_inventario/${idViaje}/`,
-            method: 'GET',
-            success: function(data) {
-                if (data.error) {
-                    tabla.html(`<tr><td colspan="5" class="error">${data.error}</td></tr>`);
-                    return;
+    $(document).ready(function() {
+        // Al seleccionar un viaje, cargar inventario
+        $('#viaje-select').change(function() {
+            const idViaje = $(this).val();
+            const tabla = $('#tabla-inventario tbody');
+            
+            // Limpiar campos del formulario
+            $('#categoria').val('');
+            $('#producto').val('');
+            $('#cantidad').val('1');
+            $('#inventario-id').val('');
+            $('#cantidad-disponible').text('');
+            $('#mensaje').text('').removeClass('error success');
+            
+            if (!idViaje) {
+                tabla.html('<tr><td colspan="5" style="text-align: center;">Seleccione un viaje para ver el inventario</td></tr>');
+                return;
+            }
+            
+            tabla.html('<tr><td colspan="5" style="text-align: center;">Cargando inventario...</td></tr>');
+            
+            $.ajax({
+                url: `/consumo/obtener_inventario/${idViaje}/`,
+                method: 'GET',
+                success: function(data) {
+                    if (data.error) {
+                        tabla.html(`<tr><td colspan="5" class="error">Error: ${data.error}</td></tr>`);
+                        return;
+                    }
+                    
+                    if (data.inventario.length === 0) {
+                        tabla.html('<tr><td colspan="5" style="text-align: center;">No hay inventario registrado para este viaje</td></tr>');
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.inventario.forEach(item => {
+                        const bajoStock = item.cantidad <= item.nivel_minimo;
+                        html += `
+                        <tr data-id="${item.id}" 
+                            data-categoria="${item.categoria}" 
+                            data-producto="${item.producto}"
+                            data-cantidad="${item.cantidad}">
+                            <td>${item.categoria}</td>
+                            <td>${item.producto}</td>
+                            <td class="${bajoStock ? 'low-stock' : ''}">${item.cantidad}</td>
+                            <td>${item.nivel_minimo}</td>
+                            <td><img src="${item.foto}" class="product-image" alt="${item.producto}"></td>
+                        </tr>`;
+                    });
+                    
+                    tabla.html(html);
+                },
+                error: function(xhr) {
+                    console.error("Error al cargar inventario:", xhr.responseText);
+                    tabla.html('<tr><td colspan="5" class="error">Error al cargar el inventario</td></tr>');
                 }
-                
-                if (data.inventario.length === 0) {
-                    tabla.html('<tr><td colspan="5">No hay productos en el inventario para este viaje</td></tr>');
-                    return;
-                }
-                
-                let html = '';
-                data.inventario.forEach(item => {
-                    html += `
-                    <tr data-id="${item.id}" 
-                        data-categoria="${item.categoria}"
-                        data-producto="${item.producto}"
-                        data-cantidad="${item.cantidad}">
-                        <td>${item.categoria}</td>
-                        <td>${item.producto}</td>
-                        <td>${item.cantidad}</td>
-                        <td>${item.nivel_minimo}</td>
-                        <td><img src="${item.foto}" width="50" height="50" alt="${item.producto}"></td>
-                    </tr>`;
-                });
-                
-                tabla.html(html);
-            },
-            error: function(xhr) {
-                console.error("Error en AJAX:", xhr.responseText);
-                tabla.html('<tr><td colspan="5">Error al cargar el inventario. Consulte la consola.</td></tr>');
+            });
+        });
+        
+        // Al seleccionar un producto de la tabla
+        $('#tabla-inventario').on('click', 'tr[data-id]', function() {
+            // Resaltar fila seleccionada
+            $('#tabla-inventario tr').removeClass('selected');
+            $(this).addClass('selected');
+            
+            // Obtener datos de la fila
+            const categoria = $(this).data('categoria');
+            const producto = $(this).data('producto');
+            const inventarioId = $(this).data('id');
+            const cantidadDisponible = $(this).data('cantidad');
+            
+            // Actualizar formulario
+            $('#categoria').val(categoria);
+            $('#producto').val(producto);
+            $('#inventario-id').val(inventarioId);
+            $('#cantidad').attr('max', cantidadDisponible);
+            $('#cantidad-disponible').text(`Disponible: ${cantidadDisponible} unidades`);
+            
+            // Ajustar cantidad si es mayor al disponible
+            if (parseInt($('#cantidad').val()) > cantidadDisponible) {
+                $('#cantidad').val(cantidadDisponible);
             }
         });
+        
+        // Al registrar consumo
+        $('#registrar').click(function() {
+            const inventarioId = $('#inventario-id').val();
+            const cantidad = parseInt($('#cantidad').val());
+            const mensaje = $('#mensaje');
+            
+            // Validaciones
+            if (!inventarioId) {
+                mensaje.text('Debe seleccionar un producto del inventario').addClass('error');
+                return;
+            }
+            
+            if (isNaN(cantidad) || cantidad <= 0) {
+                mensaje.text('La cantidad debe ser un número positivo').addClass('error');
+                return;
+            }
+            
+            const maxCantidad = parseInt($('#cantidad').attr('max'));
+            if (cantidad > maxCantidad) {
+                mensaje.text(`No puede consumir más de ${maxCantidad} unidades`).addClass('error');
+                return;
+            }
+            
+            if (!confirm(`¿Confirmar consumo de ${cantidad} unidades?`)) {
+                return;
+            }
+            
+            // Enviar datos al servidor
+            $.ajax({
+                url: '/consumo/registrar_consumo/',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    inventario_id: inventarioId,
+                    cantidad: cantidad
+                }),
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.error) {
+                        mensaje.text('Error: ' + response.error).addClass('error');
+                        return;
+                    }
+                    
+                    mensaje.text('Consumo registrado correctamente').addClass('success');
+                    
+                    // Actualizar la tabla
+                    const idViaje = $('#viaje-select').val();
+                    if (idViaje) {
+                        $('#viaje-select').trigger('change');
+                    }
+                    
+                    // Limpiar campos (excepto cantidad)
+                    $('#categoria').val('');
+                    $('#producto').val('');
+                    $('#inventario-id').val('');
+                    $('#cantidad-disponible').text('');
+                },
+                error: function(xhr) {
+                    console.error("Error al registrar consumo:", xhr.responseText);
+                    mensaje.text('Error al registrar el consumo. Consulte la consola.').addClass('error');
+                }
+            });
+        });
     });
-});
-</script>
+    </script>
 </body>
 </html>

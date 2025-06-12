@@ -53,24 +53,34 @@ def obtener_inventario(request, id_viaje):
 def registrar_consumo(request):
     if request.method == 'POST':
         try:
-            datos = json.loads(request.body)
-            inventario_id = datos.get('inventario_id')
-            cantidad = int(datos.get('cantidad'))
+            data = json.loads(request.body)
+            inventario_id = data.get('inventario_id')
+            cantidad = int(data.get('cantidad', 0))
             
+            # Validaciones básicas
             if not inventario_id or cantidad <= 0:
                 return JsonResponse({'error': 'Datos inválidos'}, status=400)
-                
-            inventario = Inventario.objects.get(id=inventario_id)
             
+            # Obtener el inventario
+            inventario = Inventario.objects.get(id_inventario=inventario_id)
+            
+            # Verificar stock suficiente
             if cantidad > inventario.cantidad_disponible:
-                return JsonResponse({'error': 'Cantidad no disponible'}, status=400)
-                
+                return JsonResponse({
+                    'error': f'No hay suficiente stock. Disponible: {inventario.cantidad_disponible}'
+                }, status=400)
+            
+            # Actualizar el inventario
             inventario.cantidad_disponible -= cantidad
             inventario.save()
             
-            return JsonResponse({'mensaje': 'Consumo registrado correctamente'})
+            return JsonResponse({
+                'mensaje': 'Consumo registrado correctamente',
+                'nuevo_stock': inventario.cantidad_disponible
+            })
+            
         except Inventario.DoesNotExist:
-            return JsonResponse({'error': 'Inventario no encontrado'}, status=404)
+            return JsonResponse({'error': 'El producto no existe en el inventario'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     
