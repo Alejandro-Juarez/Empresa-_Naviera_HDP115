@@ -14,7 +14,7 @@ def login_view(request):
             if user.username == "admin":
                 return redirect("administrador")
             else:
-                return redirect("RegistroConsumo")
+                return redirect("registro_consumo")
         else:
             messages.error(request, "Usuario o contraseña incorrectos.")
 
