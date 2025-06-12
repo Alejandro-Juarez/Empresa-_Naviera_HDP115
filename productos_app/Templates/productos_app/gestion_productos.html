@@ -159,7 +159,7 @@
         <input type="file" id="imagen" name="imagen" accept="image/*" />
         <img id="preview-imagen" />
 
-        <button class="register-button">Registrar Producto</button>
+        <button type="submit" class="register-button">Registrar Producto</button>
          <button type="submit" id="btnGuardar" disabled>Guardar Cambios</button>
       </form>
     </div>
@@ -187,8 +187,8 @@
             {% for producto in productos %}
                 <tr data-producto-id="{{ producto.id }}">
       <td>{{ producto.nombre }}</td>
-      <td>{{ producto.categoria.nombre }}</td>
-      <td>{{ producto.unidad_medida.nombre }}</td>
+      <td>{{ producto.categoria.nombre|default:"Sin unidad" }}</td>
+      <td>{{ producto.unidad_medida.nombre|default:"Sin unidad" }}</td>
       <td>
         {% if producto.imagen %}
           <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" />
