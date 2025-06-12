@@ -83,10 +83,10 @@ class Producto(models.Model):
     id_unidad_medida = models.ForeignKey('UnidadMedida', models.PROTECT, db_column='id_unidad_medida')
     id_categoria = models.ForeignKey('CategoriaProducto', models.PROTECT, db_column='id_categoria')
     nombre_producto = models.CharField(db_column='nombre_producto', max_length=20)
-    url_foto = models.CharField(db_column='url_foto', max_length=500)
+    url_foto = models.ImageField(db_column='url_foto', upload_to='productos/', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'producto'
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
@@ -132,3 +132,4 @@ class Inventario(models.Model):
 
     def __str__(self):
         return f"{self.id_producto} en viaje {self.id_viaje}"
+    

@@ -17,6 +17,8 @@ Including another URLconf
 # Proyecto_Empresa_Naviera/urls.py (tu archivo actual)
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,7 +29,9 @@ urlpatterns = [
     path('productos/', include('productos_app.urls')),
     path('administrador/', include('administrador_app.urls')),
     path('RegistroConsumo/', include('consumo_app.urls')),
-
-
+    path('productos/', include('productos_app.urls')),
+    # Puedes cambiar 'viajes/' a '' si quieres que viajes_app sea la aplicación principal por defecto
+    # path('', include('viajes_app.urls')), # Si quieres que viaje_app se cargue en la raíz
 ]
+
 

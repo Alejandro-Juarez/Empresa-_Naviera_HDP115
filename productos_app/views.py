@@ -18,32 +18,29 @@ def gestion_productos(request):
 
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
-        categoria = request.POST.get('categorisa')
+        categoria = request.POST.get('categoria')
         unidad = request.POST.get('unidad_medida')
         imagen = request.FILES.get('imagen')
-        url_foto = ''
 
-        if imagen:
-            ruta_imagen = os.path.join(settings.MEDIA_ROOT, 'productos', imagen.name)
-            with open(ruta_imagen, 'wb+') as destino:
-                for chunk in imagen.chunks():
-                    destino.write(chunk)
-            url_foto = f'productos/{imagen.name}'
-
-        Producto.objects.create(
+        producto = Producto(
             nombre_producto=nombre,
             id_categoria_id=categoria,
             id_unidad_medida_id=unidad,
-            url_foto=url_foto
         )
+        if imagen:
+            producto.url_foto = imagen
+
+        producto.save()
+
     return render(request, 'productos_app/gestion_productos.html', {
         'productos': productos,
         'categorias': categorias,
         'unidades': unidades,
     })
+       
 @csrf_exempt
 def modificar_producto(request):
-    if request.method == 'POST':
+   if request.method == 'POST':
         producto_id = request.POST.get('id')
         producto = get_object_or_404(Producto, pk=producto_id)
 
@@ -53,15 +50,13 @@ def modificar_producto(request):
 
         imagen = request.FILES.get('imagen')
         if imagen:
-            ruta_imagen = os.path.join(settings.MEDIA_ROOT, 'productos', imagen.name)
-            with open(ruta_imagen, 'wb+') as destino:
-                for chunk in imagen.chunks():
-                    destino.write(chunk)
-            producto.url_foto = f'productos/{imagen.name}'
+            producto.url_foto = imagen  # Django lo maneja
 
         producto.save()
         return JsonResponse({'success': True})
-    return JsonResponse({'error': 'Método no permitido'}, status=405)
+   return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
 @csrf_exempt
 def eliminar_producto(request):
     if request.method == 'POST':
