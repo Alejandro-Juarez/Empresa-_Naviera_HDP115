@@ -44,8 +44,6 @@ INSTALLED_APPS = [
     'login',
     'administrador_app',
     'consumo_app',
-    'productos_app',
-
 
 ]
 
