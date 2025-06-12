@@ -152,9 +152,6 @@
 <body>
     <div style="display: flex; align-items: center; justify-content: space-between;">
         <h1>Registro de Consumo</h1>
-        <div class="notification-bell" id="campana-notificaciones">
-            🔔 <span class="badge" id="contador-alertas">0</span>
-        </div>
     </div>
     
     <div>
@@ -182,9 +179,9 @@
             </div>
             
             <div>
-                <label for="cantidad"><strong>Cantidad a consumir:</strong></label>
-                <input type="number" id="cantidad" class="form-control" value="1" min="1">
-                <small id="cantidad-disponible" style="color: #666;"></small>
+                <label for="cantidad"><strong>Cantidad a consumida:</strong></label>
+                <input type="number" id="cantidad" class="form-control">
+                <small id="cantidad-disponible" style="color: #100;"></small>
             </div>
             
             <input type="hidden" id="inventario-id">
@@ -400,12 +397,6 @@
             
             $('#notification-container').append(notification);
             
-            // Auto-eliminar después de 5 segundos
-            setTimeout(() => {
-                notification.fadeOut(500, function() {
-                    $(this).remove();
-                });
-            }, 5000);
             
             // Cerrar manualmente
             notification.find('.close-notification').click(function() {
