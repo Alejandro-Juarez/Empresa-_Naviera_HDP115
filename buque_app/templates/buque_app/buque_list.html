@@ -184,6 +184,7 @@
         <div class="right-panel">
             <div class="right-panel-header">
                 <h2>Listado de Buques</h2>
+                <!-- ***** EL BOTÓN "REGRESAR" ESTÁ AQUÍ ***** -->
                 <button id="returnToMainBtn">Regresar</button>
             </div>
             <div class="search-bar">
@@ -210,6 +211,7 @@
     </div>
 
     <script>
+        // ***** INICIO DE DEFINICIÓN DE ELEMENTOS DEL DOM *****
         const buqueNombreInput = document.getElementById('buqueNombre');
         const buqueMatriculaInput = document.getElementById('buqueMatricula');
         const buqueCapacidadInput = document.getElementById('buqueCapacidad');
@@ -218,7 +220,8 @@
         const registerBuqueBtn = document.getElementById('registerBuqueBtn');
         const saveChangesBtn = document.getElementById('saveChangesBtn');
         const deleteBuqueBtn = document.getElementById('deleteBuqueBtn');
-        const returnToMainBtn = document.getElementById('returnToMainBtn');
+        // ***** EL BOTÓN "REGRESAR" SE OBTIENE AQUÍ EN JAVASCRIPT *****
+        const returnToMainBtn = document.getElementById('returnToMainBtn'); 
 
         const buqueTableBody = document.querySelector('#buqueTableContainer tbody');
         const noBuquesMessage = document.getElementById('noBuquesMessage');
@@ -231,6 +234,8 @@
         let selectedRowElement = null;
 
         const API_BASE_URL = '/buques/api';
+
+        // ***** RESTO DEL CÓDIGO (FUNCIONES Y MANEJADORES DE EVENTOS) *****
 
         function clearForm() {
             buqueNombreInput.value = '';
@@ -330,10 +335,10 @@
                 buqueTable.style.display = 'table';
                 buques.forEach(buque => {
                     const row = document.createElement('tr');
-                    row.dataset.matricula = buque.matricula.trim(); // Trim al guardar en dataset
+                    row.dataset.matricula = buque.matricula.trim();
                     row.innerHTML = `
                         <td>${buque.nombre}</td>
-                        <td>${buque.matricula.trim()}</td> <!-- Trim al mostrar en tabla -->
+                        <td>${buque.matricula.trim()}</td>
                         <td>${buque.capacidad}</td>
                         <td>${buque.tipo_nombre.trim()}</td>
                     `;
@@ -354,17 +359,12 @@
             selectedRowElement = row;
             selectedRowElement.classList.add('selected-row');
 
-            // Asegurarse de que la matrícula almacenada no tenga espacios extra
             selectedBuqueMatricula = row.dataset.matricula.trim(); 
             console.log("Matrícula almacenada para edición (selectedBuqueMatricula):", selectedBuqueMatricula);
 
-
             try {
-                // Usar la matrícula sin espacios en la URL de GET
                 const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(selectedBuqueMatricula)}/`);
                 if (!response.ok) {
-                    // Si el servidor devuelve 404 a pesar de que selectedBuqueMatricula existe,
-                    // podría ser un problema con el %20 o que el servidor no lo maneja bien.
                     throw new Error(`Error HTTP! Estado: ${response.status}. URL solicitada: ${API_BASE_URL}/buques/${selectedBuqueMatricula}/`);
                 }
                 const buque = await response.json();
@@ -372,7 +372,7 @@
                 console.log("ID del tipo de buque obtenido (buque.tipo_id):", buque.tipo_id);
 
                 buqueNombreInput.value = buque.nombre;
-                buqueMatriculaInput.value = buque.matricula.trim(); // Asegurarse de trimear al cargar en el input
+                buqueMatriculaInput.value = buque.matricula.trim();
                 buqueCapacidadInput.value = buque.capacidad;
                 buqueTipoSelect.value = buque.tipo_id; 
                 
@@ -474,7 +474,7 @@
 
             const dataToSend = {
                 nombre: nombre,
-                matricula: matricula_for_url, // ¡CORRECCIÓN CLAVE! Incluir la matrícula aquí.
+                matricula: matricula_for_url,
                 capacidad_toneladas: parseFloat(capacidad),
                 tipo_buque: id_tipo, 
             };
@@ -482,7 +482,6 @@
 
 
             try {
-                // Asegurarse de que la matrícula en la URL esté limpia de espacios y codificada
                 const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(matricula_for_url)}/`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -523,7 +522,6 @@
             }
 
             try {
-                // Asegurarse de que la matrícula en la URL esté limpia de espacios y codificada
                 const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(matricula_for_url)}/`, {
                     method: 'DELETE',
                 });
@@ -553,8 +551,7 @@
             let found = false;
 
             rows.forEach(row => {
-                // Comparar la matrícula de la fila (ya trimeada en renderTable)
-                const matriculaCellContent = row.dataset.matricula.toLowerCase(); // Usar dataset.matricula para la comparación
+                const matriculaCellContent = row.dataset.matricula.toLowerCase();
                 console.log(`Comparando matrícula de la fila '${matriculaCellContent}' con término '${searchTerm}'`);
                 if (matriculaCellContent.includes(searchTerm)) {
                     row.style.display = '';
@@ -573,13 +570,15 @@
         });
 
 
-        // ----------------------------------------------------
-        // 5. Inicialización de la Aplicación
-        // ----------------------------------------------------
-
+        // ***** INICIALIZACIÓN DE LA APLICACIÓN *****
         document.addEventListener('DOMContentLoaded', () => {
             populateTiposBuque();
             fetchAndRenderBuques();
+            // ***** EL EVENT LISTENER DEL BOTÓN "REGRESAR" ESTÁ AQUÍ *****
+            returnToMainBtn.addEventListener('click', () => {
+                console.log("Botón 'Regresar' clickeado. Redirigiendo a /administrador/...");
+                window.location.href = '/administrador/'; 
+            });
         });
 
     </script>
