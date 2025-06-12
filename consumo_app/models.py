@@ -94,4 +94,3 @@ class Inventario(models.Model):
     @property
     def foto(self):
         return self.id_producto.url_foto if self.id_producto else ""
-

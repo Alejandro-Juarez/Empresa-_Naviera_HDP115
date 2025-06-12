@@ -1,8 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
 # Create your views here.
 from django.shortcuts import render
-from .models import Viaje, Inventario
+from .models import Producto, Viaje, Inventario
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -48,6 +48,7 @@ def obtener_inventario(request, id_viaje):
     except Exception as e:
         print(f"Error en obtener_inventario: {str(e)}")  # Para depuración
         return JsonResponse({'error': 'Error al cargar el inventario'}, status=500)
+# views.py
 
 @csrf_exempt
 def registrar_consumo(request):
