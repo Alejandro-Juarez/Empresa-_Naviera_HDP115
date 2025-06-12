@@ -138,6 +138,12 @@
     <div class="left-panel">
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if error_message %}
+  <p style="color: red; font-weight: bold;">{{ error_message }}</p>
+{% endif %}
+{% if success_message %}
+  <p style="color: green; font-weight: bold;">{{ success_message }}</p>
+{% endif %}
         <input type="hidden" id="id_producto" name="id" />
         <label for="nombre">Nombre</label>
         <input type="text" id="nombre" name="nombre" placeholder="Ingrese nombre..." />
@@ -145,14 +151,14 @@
         <select id="categoria" name="categoria">
           <option value="">-- Seleccione --</option>
           {% for cat in categorias %}
-            <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+            <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}</option>
           {% endfor %}
         </select>
         <label for="unidad_medida">Unidad de medida:</label>
         <select id="unidad_medida" name="unidad_medida">
           <option value="">-- Seleccione --</option>
           {% for unidad in unidades %}
-            <option value="{{ unidad.id }}">{{ unidad.nombre }}</option>
+            <option value="{{ unidad.id_unidad_medida }}">{{ unidad.nombre_unidad_medida }}</option>
           {% endfor %}
         </select>
         <label for="imagen">Subir imagen:</label>
@@ -161,6 +167,7 @@
 
         <button type="submit" class="register-button">Registrar Producto</button>
          <button type="submit" id="btnGuardar" disabled>Guardar Cambios</button>
+         <button type="button" id="btnCancelarSeleccion" class="register-button" style="background-color: #6c757d;" disabled>Cancelar Selección</button>
       </form>
     </div>
 
@@ -183,26 +190,26 @@
               <th>Foto</th>
             </tr>
           </thead>
-          <tbody>
-            {% for producto in productos %}
-                <tr data-producto-id="{{ producto.id }}">
-      <td>{{ producto.nombre }}</td>
-      <td>{{ producto.categoria.nombre|default:"Sin unidad" }}</td>
-      <td>{{ producto.unidad_medida.nombre|default:"Sin unidad" }}</td>
-      <td>
-        {% if producto.imagen %}
-          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" />
-        {% else %}
-          Sin imagen
-        {% endif %}
-      </td>
-    </tr>
-  {% empty %}
-    <tr>
-      <td colspan="4" class="no-data">No hay productos disponibles.</td>
-    </tr>
-  {% endfor %}
-          </tbody>
+           <tbody>
+             {% for producto in productos %}
+                 <tr data-producto-id="{{ producto.id_producto }}"> {# <-- ¡CORREGIDO! Usar id_producto #}
+                   <td>{{ producto.nombre_producto }}</td> {# <-- ¡CORREGIDO! Usar nombre_producto #}
+                   <td>{{ producto.id_categoria.nombre_categoria|default:"Sin categoría" }}</td> {# <-- ¡CORREGIDO! Usar id_categoria.nombre_categoria #}
+                   <td>{{ producto.id_unidad_medida.nombre_unidad_medida|default:"Sin unidad" }}</td> {# <-- ¡CORREGIDO! Usar id_unidad_medida.nombre_unidad_medida #}
+                   <td>
+                     {% if producto.url_foto %} {# <-- ¡CORREGIDO! Usar url_foto #}
+                       <img src="{{ producto.url_foto.url }}" alt="{{ producto.nombre_producto }}" /> {# <-- ¡CORREGIDO! Usar url_foto.url y nombre_producto #}
+                     {% else %}
+                       Sin imagen
+                     {% endif %}
+                   </td>
+                 </tr>
+             {% empty %}
+               <tr>
+                 <td colspan="4" class="no-data">No hay productos disponibles.</td>
+               </tr>
+             {% endfor %}
+           </tbody>
         </table>
       </div>
     </div>
@@ -230,6 +237,8 @@ inputImagen.addEventListener('change', function () {
     document.addEventListener('DOMContentLoaded', function () {
   const tabla = document.querySelector('.data-grid tbody');
   const btnEliminar = document.getElementById('btnEliminar');
+  const btnCancelarSeleccion = document.getElementById('btnCancelarSeleccion');
+  const btnRegistrar = document.querySelector('.register-button[type="submit"]');
   let filaSeleccionada = null;
   let idProductoSeleccionado = null;
 
@@ -244,48 +253,67 @@ inputImagen.addEventListener('change', function () {
   }
 
   tabla.querySelectorAll('tr[data-producto-id]').forEach(fila => {
-    fila.addEventListener('dblclick', () => {
-      if (filaSeleccionada) {
+  fila.addEventListener('click', () => {
+    // Quitar selección anterior
+    if (filaSeleccionada) {
+      filaSeleccionada.style.backgroundColor = '';
+    }
+
+    // Marcar esta como seleccionada
+    fila.style.backgroundColor = '#ffcccc';
+    filaSeleccionada = fila;
+    idProductoSeleccionado = fila.getAttribute('data-producto-id');
+
+    // Obtener datos
+    const celdas = fila.getElementsByTagName('td');
+    const nombre = celdas[0].textContent.trim();
+    const categoria = celdas[1].textContent.trim();
+    const unidad = celdas[2].textContent.trim();
+
+    // Llenar formulario
+    document.getElementById('nombre').value = nombre;
+    document.getElementById('id_producto').value = idProductoSeleccionado;
+    seleccionarPorTexto('categoria', categoria);
+    seleccionarPorTexto('unidad_medida', unidad);
+    const imgTag = celdas[3].querySelector('img');
+if (imgTag) {
+  preview.src = imgTag.src;
+  preview.style.display = 'block';
+} else {
+  preview.src = '';
+  preview.style.display = 'none';
+}
+
+    // Habilitar botones
+    btnEliminar.disabled = false;
+    document.getElementById('btnGuardar').disabled = false;
+    btnCancelarSeleccion.disabled = false;
+    btnRegistrar.disabled = true;
+  });
+});
+btnCancelarSeleccion.addEventListener('click', () => {
+  if (filaSeleccionada) {
     filaSeleccionada.style.backgroundColor = '';
+    filaSeleccionada = null;
+    idProductoSeleccionado = null;
   }
 
-  fila.style.backgroundColor = '#ffcccc';
-  filaSeleccionada = fila;
-  idProductoSeleccionado = fila.getAttribute('data-producto-id');
+  // Limpiar campos del formulario
+  document.getElementById('nombre').value = '';
+  document.getElementById('id_producto').value = '';
+  document.getElementById('categoria').value = '';
+  document.getElementById('unidad_medida').value = '';
+  document.getElementById('imagen').value = '';
+  document.getElementById('preview-imagen').src = '';
+  document.getElementById('preview-imagen').style.display = 'none';
 
-  // Obtener valores de las celdas
-  const celdas = fila.getElementsByTagName('td');
-  const nombre = celdas[0].textContent.trim();
-  const categoria = celdas[1].textContent.trim();
-  const unidad = celdas[2].textContent.trim();
-
-  // Llenar formulario
-  document.getElementById('nombre').value = nombre;
-  document.getElementById('id_producto').value = idProductoSeleccionado;
-
-  // Seleccionar opción correcta por texto
-  seleccionarPorTexto('categoria', categoria);
-  seleccionarPorTexto('unidad_medida', unidad);
-
-  btnEliminar.disabled = false;
-  document.getElementById('btnGuardar').disabled = false;
+  // Deshabilitar botones
+  btnEliminar.disabled = true;
+  document.getElementById('btnGuardar').disabled = true;
+  btnCancelarSeleccion.disabled = true;
+  btnRegistrar.disabled = false;
 });
-
-  // Detectar clic en cualquier lugar fuera de la tabla para deseleccionar
-  document.addEventListener('click', (event) => {
-    // Si hay una fila seleccionada y el clic NO es dentro de esa fila
-    if (filaSeleccionada && !filaSeleccionada.contains(event.target)) {
-      // También evitar que el clic en el botón eliminar deseleccione inmediatamente
-      if (event.target === btnEliminar) return;
-
-      // Deseleccionar
-      filaSeleccionada.style.backgroundColor = '';
-      filaSeleccionada = null;
-      idProductoSeleccionado = null;
-      btnEliminar.disabled = true;
-      document.getElementById('btnGuardar').disabled = true;
-    }
-  });
+  
 
   btnEliminar.addEventListener('click', () => {
     if (!idProductoSeleccionado) return;

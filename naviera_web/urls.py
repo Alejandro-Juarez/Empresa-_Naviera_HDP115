@@ -34,4 +34,9 @@ urlpatterns = [
     # path('', include('viajes_app.urls')), # Si quieres que viaje_app se cargue en la raíz
 ]
 
+# --- ¡AÑADE ESTAS LÍNEAS AL FINAL DE TU ARCHIVO urls.py DEL PROYECTO! ---
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
