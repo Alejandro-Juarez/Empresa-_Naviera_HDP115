@@ -38,7 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'buque_app',
+    'productos_app',
     'viaje_app',
+    'inventario_app',
+    'login',
+    'administrador_app',
+    'consumo_app',
     'productos_app',
 
 
@@ -60,7 +65,7 @@ ROOT_URLCONF = 'naviera_web.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario de Viajes</title>
+    <style>
+        /* Estilos generales del cuerpo y el contenedor principal */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* Organiza elementos en columna */
+            justify-content: center;
+            align-items: center; /* Centra el contenido horizontalmente */
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            gap: 20px; /* Espacio entre los paneles */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1600px; /* Ancho máximo del contenedor */
+        }
+        .left-panel, .right-panel {
+            flex: 1; /* Permite que los paneles crezcan */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .left-panel { flex: 0.5; min-width: 350px; } /* Panel izquierdo más estrecho para el formulario */
+        .right-panel { flex: 1.5; } /* Panel derecho más ancho para la tabla */
+
+        /* Estilos para títulos */
+        .left-panel h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        /* Contenedor del título de la tabla y el botón Regresar */
+        .right-panel-header {
+            display: flex;
+            justify-content: space-between; /* Espacio entre el título y el botón */
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+        }
+        .right-panel-header h2 {
+            margin: 0; /* Elimina el margen superior/inferior del h2 dentro del header */
+            color: #333;
+        }
+
+        /* Estilos para grupos de formulario */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: calc(100% - 22px); /* Ancho completo menos padding y borde */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        /* Oculta las flechas de incremento/decremento en inputs numéricos */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Para Firefox */
+            appearance: textfield; /* Estándar */
+        }
+
+        /* Contenedor de botones de acción del formulario */
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .buttons-container button { /* Estilos comunes para los botones de acción */
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            flex-grow: 1; /* Permite que los botones se expandan */
+            min-width: 120px; /* Ancho mínimo para los botones */
+        }
+        /* Colores específicos de los botones de acción */
+        #registerInventarioBtn { background-color: #28a745; } /* Verde */
+        #saveChangesBtn { background-color: #007bff; display: none; } /* Azul (oculto por defecto) */
+        #deleteInventarioBtn { background-color: #dc3545; display: none; } /* Rojo (oculto por defecto) */
+        
+        /* Estilos específicos para el botón "Regresar" */
+        #returnToViajesBtn {
+            background-color: #6c757d; /* Gris */
+            padding: 8px 12px; /* Más compacto, como el botón de búsqueda */
+            flex-grow: 0; /* No se expande */
+            min-width: unset; /* Quita el ancho mínimo global */
+            align-self: flex-start; /* Alinea al inicio si hay más espacio */
+        }
+
+        /* Barra de búsqueda de la tabla */
+        .right-panel .search-bar {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        .right-panel .search-bar input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .right-panel .search-bar button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        /* Estilos de la tabla */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table thead th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        table tbody td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            vertical-align: top; /* Ajuste para contenido largo */
+        }
+        table tbody tr:hover {
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        /* Mensaje cuando no hay datos en la tabla */
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        /* Estilo para la fila seleccionada */
+        .selected-row {
+            background-color: #e0f7fa !important;
+            border: 1px solid #00bcd4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h2>Registrar Inventario</h2>
+            <!-- ELIMINADO: Selector de Viaje -->
+            <div class="form-group">
+                <label for="inventarioCategoria">Categoría:</label>
+                <select id="inventarioCategoria">
+                    <option value="">Cargando categorías...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inventarioProducto">Producto:</label>
+                <select id="inventarioProducto">
+                    <option value="">Seleccione una categoría primero...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inventarioCantidad">Cantidad Inicial:</label>
+                <input type="number" id="inventarioCantidad" min="0">
+            </div>
+            <div class="form-group">
+                <label for="inventarioNivelMinimo">Nivel Mínimo:</label>
+                <input type="number" id="inventarioNivelMinimo" min="0">
+            </div>
+
+            <div class="buttons-container">
+                <button id="registerInventarioBtn">Registrar inventario</button>
+                <button id="saveChangesBtn">Guardar cambios</button>
+                <button id="deleteInventarioBtn">Eliminar</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <!-- Contenedor para el título de la tabla y el botón de regresar -->
+            <div class="right-panel-header">
+                <h2>Inventario general del viaje</h2>
+                <button id="returnToViajesBtn">Regresar</button>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchProducto" placeholder="Buscar por Nombre de Producto">
+                <button id="searchBtn">Buscar</button>
+            </div>
+            <div id="inventarioTableContainer">
+                <table id="inventarioTable">
+                    <thead>
+                        <tr>
+                            <th>Viaje (Código)</th>
+                            <th>Categoría</th>
+                            <th>Producto</th>
+                            <th>Cantidad actual</th>
+                            <th>Nivel mínimo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos del inventario se insertarán aquí con JavaScript -->
+                    </tbody>
+                </table>
+                <p id="noInventarioMessage" class="no-data">No hay ítems en el inventario.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // 1. Obtención de Elementos del DOM (Referencias a los elementos HTML)
+        // ----------------------------------------------------
+        // Eliminado: const inventarioViajeSelect = document.getElementById('inventarioViaje');
+        const inventarioCategoriaSelect = document.getElementById('inventarioCategoria');
+        const inventarioProductoSelect = document.getElementById('inventarioProducto');
+        const inventarioCantidadInput = document.getElementById('inventarioCantidad');
+        const inventarioNivelMinimoInput = document.getElementById('inventarioNivelMinimo');
+
+        const registerInventarioBtn = document.getElementById('registerInventarioBtn');
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const deleteInventarioBtn = document.getElementById('deleteInventarioBtn');
+        const returnToViajesBtn = document.getElementById('returnToViajesBtn');
+
+        const inventarioTableBody = document.querySelector('#inventarioTableContainer tbody');
+        const noInventarioMessage = document.getElementById('noInventarioMessage');
+        const inventarioTable = document.querySelector('#inventarioTableContainer table');
+
+        const searchProductoInput = document.getElementById('searchProducto');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // Estado local para el ítem de inventario seleccionado (usaremos el ID_INVENTARIO de la DB)
+        let selectedInventarioId = null;
+        let selectedRowElement = null;
+
+        // Caché de productos por categoría para filtrado (se carga una vez)
+        let allProducts = [];
+
+        // Variable global para almacenar el ID del viaje de la URL
+        let currentViajeIdFromURL = null;
+        // Variable global para almacenar el ID del viaje del ítem de inventario seleccionado
+        let selectedInventarioViajeId = null;
+
+
+        // Base URL de tu API para esta aplicación (inventario_app).
+        // Ajusta esto si cambias la URL base en el urls.py principal.
+        const API_BASE_URL = '/inventario/api';
+
+        // ----------------------------------------------------
+        // 2. Funciones de Utilidad y UI (Interfaz de Usuario)
+        // ----------------------------------------------------
+
+        // Limpia los campos del formulario y restablece el estado de selección
+        function clearForm() {
+            // Eliminado: inventarioViajeSelect.value = '';
+            inventarioCategoriaSelect.value = '';
+            // Restablece el select de productos a su estado inicial
+            inventarioProductoSelect.innerHTML = '<option value="">Seleccione una categoría primero...</option>';
+            inventarioProductoSelect.value = '';
+            inventarioCantidadInput.value = '';
+            inventarioNivelMinimoInput.value = '';
+
+            selectedInventarioId = null;
+            selectedInventarioViajeId = null; // Limpiar también el ID del viaje seleccionado
+            if (selectedRowElement) {
+                selectedRowElement.classList.remove('selected-row');
+                selectedRowElement = null;
+            }
+            resetButtons(); // Restablece los botones a su estado inicial
+        }
+
+        // Restablece los botones a su estado de "nuevo registro"
+        function resetButtons() {
+            registerInventarioBtn.style.display = 'inline-block';
+            saveChangesBtn.style.display = 'none';
+            deleteInventarioBtn.style.display = 'none';
+        }
+
+        // Cambia los botones a su estado de "edición/eliminación"
+        function setEditButtons() {
+            registerInventarioBtn.style.display = 'none';
+            saveChangesBtn.style.display = 'inline-block';
+            deleteInventarioBtn.style.display = 'inline-block';
+        }
+
+        // Muestra un mensaje simple (utiliza alert() por simplicidad, considerar un modal personalizado)
+        function showMessage(message, isError = false) {
+            alert(message);
+            if (isError) {
+                console.error("ERROR: ", message);
+            } else {
+                console.log("INFO: ", message);
+            }
+        }
+
+        // ----------------------------------------------------
+        // 3. Funciones de Interacción con la API (AJAX con fetch)
+        // ----------------------------------------------------
+
+        // Obtiene todos los ítems de inventario y los renderiza en la tabla
+        async function fetchAndRenderInventarios() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventarios/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const inventarios = await response.json();
+                renderTable(inventarios);
+            } catch (error) {
+                showMessage(`Error al cargar inventarios: ${error.message}. Asegúrate de que el servidor Django esté corriendo y las URLs sean correctas.`, true);
+            }
+        }
+
+        // Eliminado: populateViajes() ya no es necesario aquí, el ID de viaje se obtiene de la URL.
+
+        // Obtiene y puebla el select de Categorías de Producto
+        async function populateCategorias() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categorias-producto/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const categorias = await response.json();
+
+                inventarioCategoriaSelect.innerHTML = '<option value="">Seleccione una categoría</option>';
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id; // El ID de la categoría
+                    option.textContent = categoria.nombre; // El nombre de la categoría
+                    inventarioCategoriaSelect.appendChild(option);
+                });
+            } catch (error) {
+                showMessage(`Error al cargar categorías de producto: ${error.message}.`, true);
+            }
+        }
+
+        // Obtiene todos los productos y los almacena en una caché local para filtrado
+        async function fetchAllProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/productos/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                allProducts = await response.json(); // Almacena todos los productos para filtrado local
+                // console.log("Productos cargados:", allProducts); // Para depuración
+            } catch (error) {
+                showMessage(`Error al cargar productos: ${error.message}.`, true);
+            }
+        }
+
+        // Pueblra el select de Productos, opcionalmente filtrando por categoría seleccionada
+        function populateProductos(categoriaId = null, selectedProductoId = null) {
+            inventarioProductoSelect.innerHTML = '<option value="">Seleccione un producto</option>';
+            // Filtra los productos si se proporciona un ID de categoría, de lo contrario, usa todos
+            const filteredProducts = categoriaId
+                ? allProducts.filter(p => p.categoria_id == categoriaId)
+                : allProducts;
+
+            filteredProducts.forEach(producto => {
+                const option = document.createElement('option');
+                option.value = producto.id; // El ID del producto
+                option.textContent = producto.nombre; // El nombre del producto
+                inventarioProductoSelect.appendChild(option);
+            });
+
+            // Si se proporciona un ID de producto para seleccionar, lo establece
+            if (selectedProductoId) {
+                inventarioProductoSelect.value = selectedProductoId;
+            } else {
+                 inventarioProductoSelect.value = ''; // Limpia la selección si no hay pre-selección
+            }
+        }
+
+
+        // Renderiza la tabla de inventario con los datos recibidos de la API
+        function renderTable(inventarios) {
+            inventarioTableBody.innerHTML = ''; // Limpia el contenido actual de la tabla
+            if (inventarios.length === 0) {
+                noInventarioMessage.style.display = 'block'; // Muestra el mensaje de "No hay datos"
+                inventarioTable.style.display = 'none'; // Oculta la tabla
+            } else {
+                noInventarioMessage.style.display = 'none'; // Oculta el mensaje
+                inventarioTable.style.display = 'table'; // Muestra la tabla
+                inventarios.forEach(item => {
+                    const row = document.createElement('tr');
+                    // Almacenamos el ID_INVENTARIO como un atributo de datos para fácil recuperación
+                    row.dataset.id = item.id; 
+                    row.innerHTML = `
+                        <td>${item.viaje_codigo}</td>
+                        <td>${item.producto_categoria_nombre}</td>
+                        <td>${item.producto_nombre}</td>
+                        <td>${item.cantidad_disponible}</td>
+                        <td>${item.nivel_minimo}</td>
+                    `;
+                    row.addEventListener('click', () => selectRow(row)); // Añade el evento click a la fila
+                    inventarioTableBody.appendChild(row);
+                });
+            }
+            clearForm(); // Limpia el formulario después de renderizar la tabla
+        }
+
+        // Selecciona una fila de la tabla, obtiene los detalles del ítem de inventario y rellena el formulario
+        async function selectRow(row) {
+            // Remueve la clase 'selected-row' de la fila previamente seleccionada
+            if (selectedRowElement) {
+                selectedRowElement.classList.remove('selected-row');
+            }
+            selectedRowElement = row;
+            selectedRowElement.classList.add('selected-row'); // Añade la clase a la fila actual
+
+            selectedInventarioId = row.dataset.id; // Obtiene el ID_INVENTARIO de la fila seleccionada
+
+            try {
+                // Realiza una solicitud GET a la API para obtener los detalles del ítem de inventario
+                const response = await fetch(`${API_BASE_URL}/inventarios/${selectedInventarioId}/`);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const inventario = await response.json();
+
+                // Eliminado: inventarioViajeSelect.value = inventario.viaje_id;
+                selectedInventarioViajeId = inventario.viaje_id; // Almacenar el ID del viaje del ítem seleccionado
+                inventarioCantidadInput.value = inventario.cantidad_disponible;
+                inventarioNivelMinimoInput.value = inventario.nivel_minimo;
+
+                // Para los selects anidados:
+                // 1. Selecciona la categoría del producto
+                inventarioCategoriaSelect.value = inventario.producto_categoria_id;
+                // 2. Vuelve a poblar el select de productos filtrando por la categoría,
+                //    y pre-selecciona el producto específico
+                populateProductos(inventario.producto_categoria_id, inventario.producto_id);
+
+                setEditButtons(); // Cambia los botones a modo edición
+            } catch (error) {
+                showMessage(`Error al cargar detalles del inventario: ${error.message}`, true);
+                clearForm(); // Limpia el formulario si la carga falla
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // 4. Manejadores de Eventos (Botones y Búsqueda)
+        // ----------------------------------------------------
+
+        // Maneja el cambio en la selección de categoría para filtrar productos
+        inventarioCategoriaSelect.addEventListener('change', () => {
+            const categoriaId = inventarioCategoriaSelect.value;
+            populateProductos(categoriaId); // Llama a la función para poblar productos con el filtro
+        });
+
+        // Manejador para el botón "Registrar inventario" (crea un nuevo ítem)
+        registerInventarioBtn.addEventListener('click', async () => {
+            // El ID del viaje ahora se obtiene de la URL al cargar la página
+            const id_viaje = currentViajeIdFromURL; 
+            const id_producto = inventarioProductoSelect.value;
+            const cantidad_disponible = inventarioCantidadInput.value;
+            const nivel_minimo = inventarioNivelMinimoInput.value;
+
+            // Validaciones básicas del lado del cliente
+            if (!id_viaje || !id_producto || cantidad_disponible === '' || nivel_minimo === '') {
+                showMessage('Por favor, complete todos los campos y asegúrese de que la página se cargó con un ID de viaje válido.', true);
+                return;
+            }
+
+            // Datos a enviar al backend en formato JSON
+            const dataToSend = {
+                id_viaje: id_viaje,
+                id_producto: id_producto,
+                cantidad_disponible: parseInt(cantidad_disponible), // Asegura que sea un entero
+                nivel_minimo: parseInt(nivel_minimo),             // Asegura que sea un entero
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventarios/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage('Inventario registrado exitosamente.');
+                    fetchAndRenderInventarios(); // Recarga la tabla de inventario
+                } else {
+                    let errorMessage = 'Error al registrar inventario.';
+                    // Mensaje de error específico para duplicados (por unique_together)
+                    if (result.non_field_errors && result.non_field_errors.includes('The fields id_viaje, id_producto must make a unique set.')) {
+                         errorMessage = 'Este producto ya está registrado para este viaje.';
+                    } else {
+                        errorMessage += ' Detalles: ' + JSON.stringify(result);
+                    }
+                    showMessage(errorMessage, true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al registrar inventario: ${error.message}.`, true);
+            }
+        });
+
+        // Manejador para el botón "Guardar cambios" (actualiza un ítem existente)
+        saveChangesBtn.addEventListener('click', async () => {
+            if (!selectedInventarioId) {
+                showMessage('Ningún ítem de inventario seleccionado para guardar cambios.', true);
+                return;
+            }
+
+            // El id_viaje para la edición se toma del ítem seleccionado (que se almacenó en selectedInventarioViajeId)
+            const id_viaje = selectedInventarioViajeId; 
+            const id_producto = inventarioProductoSelect.value; 
+            const cantidad_disponible = inventarioCantidadInput.value;
+            const nivel_minimo = inventarioNivelMinimoInput.value;
+
+            // Validaciones básicas
+            if (!id_viaje || !id_producto || cantidad_disponible === '' || nivel_minimo === '') {
+                showMessage('Por favor, complete todos los campos.', true);
+                return;
+            }
+
+            // Datos a enviar al backend
+            const dataToSend = {
+                id_viaje: id_viaje,
+                id_producto: id_producto,
+                cantidad_disponible: parseInt(cantidad_disponible),
+                nivel_minimo: parseInt(nivel_minimo),
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventarios/${selectedInventarioId}/`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage('Cambios guardados exitosamente.');
+                    fetchAndRenderInventarios(); // Recarga la tabla
+                } else {
+                    showMessage('Error al guardar cambios. Detalles: ' + JSON.stringify(result), true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al guardar cambios: ${error.message}.`, true);
+            }
+        });
+
+        // Manejador para el botón "Eliminar" (elimina un ítem de inventario)
+        deleteInventarioBtn.addEventListener('click', async () => {
+            if (!selectedInventarioId) {
+                showMessage('Ningún ítem de inventario seleccionado para eliminar.', true);
+                return;
+            }
+
+            // Confirmación antes de eliminar
+            if (!confirm(`¿Está seguro de que desea eliminar este ítem de inventario?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/inventarios/${selectedInventarioId}/`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    showMessage('Ítem de inventario eliminado exitosamente.');
+                    fetchAndRenderInventarios(); // Recarga la tabla
+                } else {
+                    const result = await response.json();
+                    showMessage('Error al eliminar ítem de inventario. Detalles: ' + JSON.stringify(result), true);
+                }
+            } catch (error) {
+                showMessage(`Error de conexión al eliminar ítem de inventario: ${error.message}.`, true);
+            }
+        });
+
+        // Manejador para el botón "Regresar" (redirige a la aplicación de viajes)
+        returnToViajesBtn.addEventListener('click', () => {
+            window.location.href = '/viajes/'; // Redirige a la aplicación de viajes
+        });
+
+        // Manejador para el botón "Buscar" (Filtra la tabla de inventario localmente por nombre de producto)
+        searchBtn.addEventListener('click', () => {
+            const searchTerm = searchProductoInput.value.trim().toLowerCase();
+            const rows = inventarioTableBody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                // El nombre del producto está en la tercera celda de la fila (índice 2)
+                const productoCellContent = row.children[2].textContent.trim().toLowerCase(); 
+                if (productoCellContent.includes(searchTerm)) {
+                    row.style.display = ''; // Muestra la fila si coincide
+                } else {
+                    row.style.display = 'none'; // Oculta la fila si no coincide
+                }
+            });
+        });
+
+
+        // ----------------------------------------------------
+        // 5. Inicialización de la Aplicación (Se ejecuta cuando el DOM está completamente cargado)
+        // ----------------------------------------------------
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Manejo de la URL para obtener y validar el ID de viaje
+            const urlParams = new URLSearchParams(window.location.search);
+            const viajeIdFromUrl = urlParams.get('viaje_id');
+            if (viajeIdFromUrl) {
+                currentViajeIdFromURL = viajeIdFromUrl; // Almacenar el ID del viaje de la URL
+                // Aquí podrías mostrar el código del viaje en algún lugar si quisieras,
+                // por ejemplo, en un h2 o un span para informar al usuario.
+                // Ejemplo: document.getElementById('viajeDisplay').textContent = `Inventario para Viaje ${viajeIdFromUrl}`;
+            } else {
+                showMessage('Error: No se proporcionó un ID de viaje para el inventario. Por favor, seleccione un viaje en la pantalla anterior.', true);
+                window.location.href = '/viajes/'; // Redirige de vuelta si no hay ID de viaje
+                return; // Detiene la ejecución para evitar errores
+            }
+
+            // Cargar los selects de Foreign Key en orden de dependencia
+            // Eliminado: await populateViajes(); // Ya no es necesario el select de viaje en el formulario
+            await populateCategorias();   // 1. Cargar categorías de producto
+            await fetchAllProducts();     // 2. Cargar TODOS los productos (para la caché y filtrado)
+
+            // Poblar el select de productos inicialmente (sin filtro de categoría)
+            populateProductos(); 
+
+            // Finalmente, cargar y renderizar los ítems de inventario existentes
+            // Considera filtrar esto por el currentViajeIdFromURL si solo quieres ver el inventario de ese viaje
+            fetchAndRenderInventarios(); 
+        });
+
+    </script>
+</body>
+</html>

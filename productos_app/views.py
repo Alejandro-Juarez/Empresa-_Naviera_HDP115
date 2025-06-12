@@ -28,7 +28,7 @@ def gestion_productos(request):
             id_unidad_medida_id=unidad,
         )
         if imagen:
-            producto.url_foto = imagen  # Aquí asignas directamente el archivo
+            producto.url_foto = imagen
 
         producto.save()
 
