@@ -28,7 +28,7 @@ urlpatterns = [
     path('inventario/', include('inventario_app.urls')),
     path('productos/', include('productos_app.urls')),
     path('administrador/', include('administrador_app.urls')),
-    path('RegistroConsumo/', include('consumo_app.urls')),
+    path('', include('consumo_app.urls')),
     path('productos/', include('productos_app.urls')),
     # Puedes cambiar 'viajes/' a '' si quieres que viajes_app sea la aplicación principal por defecto
     # path('', include('viajes_app.urls')), # Si quieres que viaje_app se cargue en la raíz
