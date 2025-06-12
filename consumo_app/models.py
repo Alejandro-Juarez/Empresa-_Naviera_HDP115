@@ -67,7 +67,7 @@ class Viaje(models.Model):
 
     class Meta:
         db_table = 'viaje'
-        managed = False  # Mantener esto ya que la tabla ya existe
+        managed = False
 
     def __str__(self):
         return f"Viaje {self.codigo_viaje} - {self.destino}"

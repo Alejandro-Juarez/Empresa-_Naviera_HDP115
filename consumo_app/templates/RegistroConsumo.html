@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Registro de Consumo</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -93,7 +94,6 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        /* Estilos para notificaciones */
         .notification-container {
             position: fixed;
             top: 20px;
@@ -215,12 +215,10 @@
         </div>
     </div>
 
-    <!-- Contenedor para notificaciones -->
     <div class="notification-container" id="notification-container"></div>
 
     <script>
     $(document).ready(function() {
-        // Al seleccionar un viaje, cargar inventario
         $('#viaje-select').change(function() {
             const idViaje = $(this).val();
             const tabla = $('#tabla-inventario tbody');
@@ -316,7 +314,6 @@
             const cantidad = parseInt($('#cantidad').val());
             const mensaje = $('#mensaje');
             
-            // Validaciones
             if (!inventarioId) {
                 mensaje.text('Debe seleccionar un producto del inventario').addClass('error');
                 return;
@@ -357,7 +354,6 @@
                     mensaje.text('Consumo registrado correctamente').addClass('success');
                     showNotification('Consumo registrado correctamente', 'success');
                     
-                    // Verificar si el stock quedó bajo el mínimo
                     const nuevoStock = response.nuevo_stock;
                     const nivelMinimo = $('#tabla-inventario tr.selected td:nth-child(4)').text();
                     
@@ -372,7 +368,7 @@
                         $('#viaje-select').trigger('change');
                     }
                     
-                    // Limpiar campos (excepto cantidad)
+                    // Limpiar campos
                     $('#categoria').val('');
                     $('#producto').val('');
                     $('#inventario-id').val('');
@@ -386,7 +382,6 @@
             });
         });
         
-        // Función para mostrar notificaciones
         function showNotification(message, type = 'info') {
             const notification = $(`
                 <div class="notification ${type}">
@@ -398,7 +393,6 @@
             $('#notification-container').append(notification);
             
             
-            // Cerrar manualmente
             notification.find('.close-notification').click(function() {
                 notification.fadeOut(500, function() {
                     $(this).remove();
@@ -406,21 +400,18 @@
             });
         }
         
-        // Actualizar contador de alertas
         function updateAlertCount() {
-            // Aquí podrías hacer una llamada AJAX para obtener alertas no leídas
-            // Por ahora simulamos con un número aleatorio para demostración
+
             const randomCount = Math.floor(Math.random() * 5);
             $('#contador-alertas').text(randomCount);
         }
         
-        // Mostrar alertas al hacer clic en la campana
+
         $('#campana-notificaciones').click(function() {
-            // Aquí podrías mostrar un listado de alertas históricas
+
             showNotification('Esta sería la lista de alertas históricas', 'info');
         });
-        
-        // Inicializar contador
+
         updateAlertCount();
     });
     </script>
