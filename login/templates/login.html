@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empresa Naviera SA.SV - Login</title>
+    <link href="login.css" rel="stylesheet">
+    <style>
+        {% include "login.css" %}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <header>
+            <h1>Empresa Naviera SA.SV Este es</h1>
+            <p class="subtitle">Software técnico de gestión de buques que proporciona a los gestores una visión general de las provisiones de todo el buque.</p>
+            <p class="tagline">Revoluciona el funcionamiento de la Gestión de Buques y proporciona una base sólida para el crecimiento de la empresa.</p>
+        </header>
+
+        <div class="separator"></div>
+
+        <section class="login-form">
+            <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+        <label>Usuario:</label>
+        <input type="text" name="username">
+        </div>
+        <div class="form-group">
+        <label>Contraseña:</label>
+        <input type="password" name="password">
+        </div>
+
+        <input class="login-button" type="submit" value="Ingresar">
+    </form>
+        </section>
+
+        <div class="error-message">
+                {% if messages %}
+        {% for message in messages %}
+            <p style="color:red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+        </div>
+    </div>
+</body>
+</html>

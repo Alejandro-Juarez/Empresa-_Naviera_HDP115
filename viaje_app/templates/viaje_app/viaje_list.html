@@ -32,10 +32,24 @@
         .left-panel { flex: 0.5; min-width: 300px; } /* Panel izquierdo un poco más estrecho */
         .right-panel { flex: 1.5; } /* Panel derecho más ancho para la tabla */
 
-        .left-panel h2, .right-panel h2 {
+        .left-panel h2 {
             margin-top: 0;
             color: #333;
         }
+        /* Contenedor del título de la tabla y el botón Regresar */
+        .right-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .right-panel-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -84,6 +98,15 @@
         #saveChangesBtn { background-color: #007bff; display: none; } /* Azul */
         #deleteViajeBtn { background-color: #dc3545; display: none; } /* Rojo */
         #addInventarioBtn { background-color: #ffc107; color: #333; } /* Amarillo/Naranja */
+
+        /* Estilos específicos para el botón "Regresar" */
+        #returnToMainBtn {
+            background-color: #6c757d; /* Gris */
+            padding: 8px 12px; /* Más compacto, como el botón de búsqueda */
+            flex-grow: 0; /* No se expande */
+            min-width: unset; /* Quita el ancho mínimo global */
+            align-self: flex-start; /* Alinea al inicio si hay más espacio */
+        }
 
         .right-panel .search-bar {
             display: flex;
@@ -167,18 +190,20 @@
                     <option value="">Cargando estados...</option>
                 </select>
             </div>
-            <!-- Campo de Inventario ELIMINADO de aquí -->
 
             <div class="buttons-container">
                 <button id="registerViajeBtn">Registrar viaje</button>
                 <button id="saveChangesBtn">Guardar cambios</button>
                 <button id="deleteViajeBtn">Eliminar viaje</button>
-                <button id="addInventarioBtn">Añadir inventario</button> <!-- Botón se mantiene -->
+                <button id="addInventarioBtn">Añadir inventario</button>
             </div>
         </div>
 
         <div class="right-panel">
-            <h2>Listado de Viajes</h2>
+            <div class="right-panel-header">
+                <h2>Listado de Viajes</h2>
+                <button id="returnToMainBtn">Regresar</button> <!-- Botón Regresar -->
+            </div>
             <div class="search-bar">
                 <input type="text" id="searchCodigo" placeholder="Buscar por Código">
                 <button id="searchBtn">Buscar</button>
@@ -193,7 +218,6 @@
                             <th>Fecha fin</th>
                             <th>Destino</th>
                             <th>Estado</th>
-                            <!-- Columna de Inventario ELIMINADA de aquí -->
                         </tr>
                     </thead>
                     <tbody>
@@ -215,12 +239,12 @@
         const viajeFechaFinInput = document.getElementById('viajeFechaFin');
         const viajeDestinoInput = document.getElementById('viajeDestino');
         const viajeEstadoSelect = document.getElementById('viajeEstado');
-        // const viajeInventarioSelect = document.getElementById('viajeInventario'); // ELIMINADO
 
         const registerViajeBtn = document.getElementById('registerViajeBtn');
         const saveChangesBtn = document.getElementById('saveChangesBtn');
         const deleteViajeBtn = document.getElementById('deleteViajeBtn');
-        const addInventarioBtn = document.getElementById('addInventarioBtn'); // Botón se mantiene
+        const addInventarioBtn = document.getElementById('addInventarioBtn');
+        const returnToMainBtn = document.getElementById('returnToMainBtn'); // Referencia al nuevo botón
 
         const viajeTableBody = document.querySelector('#viajeTableContainer tbody');
         const noViajesMessage = document.getElementById('noViajesMessage');
@@ -230,11 +254,10 @@
         const searchBtn = document.getElementById('searchBtn');
 
         // Estado local para el viaje seleccionado (ahora almacenaremos el código y el elemento TR)
-        let selectedViajeCodigo = null;
+        let selectedViajeCodigo = null; // Este es el ID del viaje (id_viaje de la DB)
         let selectedRowElement = null;
 
-        // Base URL de tu API
-        // CORRECCIÓN: Ajustado a '/viajes/api' para coincidir con tu urls.py principal
+        // Base URL de tu API (ajusta si tu proyecto está en otro prefijo, ej. '/api' si es la raíz)
         const API_BASE_URL = '/viajes/api';
 
 
@@ -242,7 +265,6 @@
         // 2. Funciones de Utilidad y UI
         // ----------------------------------------------------
 
-        // Función para limpiar el formulario y restablecer el estado de selección
         function clearForm() {
             viajeCodigoInput.value = '';
             viajeBuqueSelect.value = '';
@@ -250,27 +272,23 @@
             viajeFechaFinInput.value = '';
             viajeDestinoInput.value = '';
             viajeEstadoSelect.value = '';
-            // viajeInventarioSelect.value = ''; // ELIMINADO
 
             selectedViajeCodigo = null;
             if (selectedRowElement) {
                 selectedRowElement.classList.remove('selected-row');
                 selectedRowElement = null;
             }
-            resetButtons();
+            resetButtons(); // Restablecer botones a "registrar"
         }
 
-        // Función para restablecer los botones a su estado inicial (Registrar visible, otros ocultos)
         function resetButtons() {
             registerViajeBtn.style.display = 'inline-block';
             saveChangesBtn.style.display = 'none';
             deleteViajeBtn.style.display = 'none';
-            // El botón Añadir Inventario siempre visible
-            addInventarioBtn.style.display = 'inline-block';
+            addInventarioBtn.style.display = 'inline-block'; // El botón Añadir Inventario siempre visible
             viajeCodigoInput.readOnly = false; // Permitir editar el código para nuevos registros
         }
 
-        // Función para cambiar los botones a modo edición (Registrar oculto, otros visibles)
         function setEditButtons() {
             registerViajeBtn.style.display = 'none';
             saveChangesBtn.style.display = 'inline-block';
@@ -279,9 +297,8 @@
             viajeCodigoInput.readOnly = true; // Bloquear edición del código en modo edición
         }
 
-        // Muestra un mensaje de alerta (ejemplo simple)
         function showMessage(message, isError = false) {
-            alert(message);
+            alert(message); // Simple alert
             if (isError) {
                 console.error("ERROR: ", message);
             } else {
@@ -318,7 +335,7 @@
         // Obtener y poblar el select de buques
         async function populateBuques() {
             try {
-                // Usamos la API de buques de la aplicación buque_app.
+                // Llama a la API de buques de la aplicación buque_app.
                 // Ajusta la URL si tu buque_app tiene un prefijo diferente.
                 const response = await fetch(`/buques/api/buques/`);
                 if (!response.ok) {
@@ -359,9 +376,6 @@
             }
         }
 
-        // populateInventarios() y relacionados ELIMINADO
-
-
         // Renderiza la tabla de viajes con los datos recibidos de la API
         function renderTable(viajes) {
             viajeTableBody.innerHTML = ''; // Limpiar tabla
@@ -373,7 +387,10 @@
                 viajeTable.style.display = 'table';
                 viajes.forEach(viaje => {
                     const row = document.createElement('tr');
-                    row.dataset.codigo = viaje.codigo_viaje; // Almacenar el código de viaje para selección
+                    // IMPORTANTE: selectedViajeCodigo es el ID_VIAJE (PK de la DB), no el codigo_viaje
+                    // Lo pasamos como data-id para que podamos recuperarlo fácilmente
+                    row.dataset.id = viaje.id;
+                    row.dataset.codigo = viaje.codigo_viaje; // También guardamos el código para mostrar
                     row.innerHTML = `
                         <td>${viaje.codigo_viaje}</td>
                         <td>${viaje.buque_nombre} (${viaje.buque_matricula})</td>
@@ -381,7 +398,6 @@
                         <td>${formatDateForDisplay(viaje.fecha_fin)}</td>
                         <td>${viaje.destino}</td>
                         <td>${viaje.estado_nombre}</td>
-                        <!-- Columna de Inventario ELIMINADA de aquí -->
                     `;
                     row.addEventListener('click', () => selectRow(row));
                     viajeTableBody.appendChild(row);
@@ -398,11 +414,13 @@
             selectedRowElement = row;
             selectedRowElement.classList.add('selected-row');
 
-            selectedViajeCodigo = row.dataset.codigo; // Obtener el código de viaje de la fila
+            // selectedViajeCodigo ahora almacenará el ID_VIAJE (PK de la DB)
+            selectedViajeCodigo = row.dataset.id; 
 
             try {
-                // Hacer una solicitud GET a la API para obtener los detalles del viaje
-                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`);
+                // Hacer una solicitud GET a la API para obtener los detalles del viaje.
+                // Aquí usamos el codigo_viaje de la fila seleccionada para la URL de detalle
+                const response = await fetch(`${API_BASE_URL}/viajes/${row.dataset.codigo}/`);
                 if (!response.ok) {
                     throw new Error(`Error HTTP! Estado: ${response.status}`);
                 }
@@ -411,11 +429,10 @@
                 // Rellenar los campos del formulario con los detalles del viaje
                 viajeCodigoInput.value = viaje.codigo_viaje;
                 viajeBuqueSelect.value = viaje.buque_id;
-                viajeFechaInicioInput.value = viaje.fecha_inicio; // Formato YYYY-MM-DD
-                viajeFechaFinInput.value = viaje.fecha_fin;     // Formato YYYY-MM-DD
+                viajeFechaInicioInput.value = viaje.fecha_inicio; // Formatoレンダー-MM-DD
+                viajeFechaFinInput.value = viaje.fecha_fin;     // Formatoレンダー-MM-DD
                 viajeDestinoInput.value = viaje.destino;
                 viajeEstadoSelect.value = viaje.estado_id;
-                // viajeInventarioSelect.value = viaje.inventario_id; // ELIMINADO
 
                 setEditButtons(); // Cambiar los botones a modo edición
             } catch (error) {
@@ -437,15 +454,14 @@
             const fecha_fin = viajeFechaFinInput.value;
             const destino = viajeDestinoInput.value.trim();
             const id_estado = viajeEstadoSelect.value;
-            // const id_inventario = viajeInventarioSelect.value; // ELIMINADO
 
             // Validaciones básicas del lado del cliente
-            if (!codigo_viaje || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) { // id_inventario ELIMINADO
+            if (!codigo_viaje || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) {
                 showMessage('Por favor, complete todos los campos.', true);
                 return;
             }
 
-            // Convertir el código de viaje a número (si es necesario para la API)
+            // Convertir el código de viaje a número
             const codigoViajeNumerico = parseInt(codigo_viaje);
             if (isNaN(codigoViajeNumerico)) {
                 showMessage('El código de viaje debe ser un número.', true);
@@ -460,7 +476,6 @@
                 fecha_fin: fecha_fin,
                 destino: destino,
                 id_estado: id_estado, // Enviamos el ID del estado
-                // id_inventario: id_inventario, // ELIMINADO
             };
 
             try {
@@ -499,20 +514,21 @@
                 return;
             }
 
-            const codigo_viaje = viajeCodigoInput.value.trim(); // Se usa para identificar
+            // Usamos el codigo_viaje actual en el input para la URL PUT
+            const codigo_viaje_for_url = viajeCodigoInput.value.trim(); 
+
             const id_buque = viajeBuqueSelect.value;
             const fecha_inicio = viajeFechaInicioInput.value;
             const fecha_fin = viajeFechaFinInput.value;
             const destino = viajeDestinoInput.value.trim();
             const id_estado = viajeEstadoSelect.value;
-            // const id_inventario = viajeInventarioSelect.value; // ELIMINADO
 
             // Validaciones básicas del lado del cliente
-            if (!codigo_viaje || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) { // id_inventario ELIMINADO
+            if (!codigo_viaje_for_url || !id_buque || !fecha_inicio || !fecha_fin || !destino || !id_estado) {
                 showMessage('Por favor, complete todos los campos.', true);
                 return;
             }
-            const codigoViajeNumerico = parseInt(codigo_viaje);
+            const codigoViajeNumerico = parseInt(codigo_viaje_for_url);
             if (isNaN(codigoViajeNumerico)) {
                 showMessage('El código de viaje debe ser un número.', true);
                 return;
@@ -520,17 +536,16 @@
 
             // Datos a enviar al backend
             const dataToSend = {
-                codigo_viaje: codigoViajeNumerico,
+                codigo_viaje: codigoViajeNumerico, // Se envía el código actual en el body
                 id_buque: id_buque,
                 fecha_inicio: fecha_inicio,
                 fecha_fin: fecha_fin,
                 destino: destino,
                 id_estado: id_estado,
-                // id_inventario: id_inventario, // ELIMINADO
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`, {
+                const response = await fetch(`${API_BASE_URL}/viajes/${codigo_viaje_for_url}/`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -559,12 +574,15 @@
                 return;
             }
 
-            if (!confirm(`¿Está seguro de que desea eliminar el viaje con código ${selectedViajeCodigo}?`)) {
+            // Usamos el codigo_viaje de la fila seleccionada para la URL DELETE
+            const codigo_viaje_for_url = selectedRowElement.dataset.codigo;
+
+            if (!confirm(`¿Está seguro de que desea eliminar el viaje con código ${codigo_viaje_for_url}?`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/viajes/${selectedViajeCodigo}/`, {
+                const response = await fetch(`${API_BASE_URL}/viajes/${codigo_viaje_for_url}/`, {
                     method: 'DELETE',
                     headers: {
                         // 'X-CSRFToken': getCookie('csrftoken'),
@@ -584,14 +602,20 @@
         });
 
 
-        // Manejador para el botón "Añadir inventario" (solo una alerta por ahora)
+        // Manejador para el botón "Añadir inventario" (redirige a inventario_app)
         addInventarioBtn.addEventListener('click', () => {
-            // Aquí puedes redirigir a la nueva aplicación 'inventario_app'
-            // Por ejemplo, si inventario_app está en /inventario_app/
-            // window.location.href = '/inventario_app/';
-            showMessage('Función "Añadir inventario" pendiente de implementar. ¡Redirigirá a la aplicación de inventario!');
+            if (!selectedViajeCodigo) {
+                showMessage('Por favor, seleccione un viaje de la tabla para añadirle inventario.', true);
+                return;
+            }
+            // Redirige a la aplicación de inventario, pasando el ID_VIAJE como parámetro
+            window.location.href = `/inventario/?viaje_id=${selectedViajeCodigo}`;
         });
 
+        // Manejador para el botón "Regresar"
+        returnToMainBtn.addEventListener('click', () => {
+            window.location.href = '/administrador/'; // Redirige al menu
+        });
 
         // Manejador para el botón "Buscar" (Filtra la tabla localmente por código)
         searchBtn.addEventListener('click', () => {
@@ -620,7 +644,6 @@
             // Cargar los selects de Foreign Key primero
             populateBuques();
             populateEstadosViaje();
-            // populateInventarios(); // ELIMINADO
 
             // Luego, cargar y renderizar los viajes existentes
             fetchAndRenderViajes();

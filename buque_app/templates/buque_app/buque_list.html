@@ -29,10 +29,27 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .left-panel h2, .right-panel h2 {
+        .left-panel { flex: 0.5; min-width: 300px; }
+        .right-panel { flex: 1.5; }
+
+        .left-panel h2 {
             margin-top: 0;
             color: #333;
         }
+        /* Contenedor del título de la tabla y el botón Regresar */
+        .right-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .right-panel-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -41,34 +58,28 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        /* Estilos generales para campos de texto y select */
         .form-group input[type="text"],
+        .form-group input[type="number"],
         .form-group select {
             width: calc(100% - 22px);
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        /* Nuevo estilo para input type="number" */
-        .form-group input[type="number"] {
-            -moz-appearance: textfield; /* Para Firefox */
-            appearance: textfield; /* Estándar */
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        /* Oculta las flechas de incremento/decremento en navegadores WebKit (Chrome, Safari) */
-        .form-group input[type="number"]::-webkit-outer-spin-button,
-        .form-group input[type="number"]::-webkit-inner-spin-button {
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
         .buttons-container {
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .buttons-container button {
             padding: 10px 15px;
@@ -77,34 +88,38 @@
             cursor: pointer;
             font-size: 16px;
             color: white;
+            flex-grow: 1;
+            min-width: 120px;
         }
-        #registerShipBtn {
-            background-color: #28a745; /* Verde */
+        #registerBuqueBtn { background-color: #28a745; }
+        #saveChangesBtn { background-color: #007bff; display: none; }
+        #deleteBuqueBtn { background-color: #dc3545; display: none; }
+
+        #returnToMainBtn {
+            background-color: #6c757d;
+            padding: 8px 12px;
+            flex-grow: 0;
+            min-width: unset;
+            align-self: flex-start;
         }
-        #saveChangesBtn {
-            background-color: #007bff; /* Azul */
-            display: none; /* Inicialmente oculto */
-        }
-        #deleteShipBtn {
-            background-color: #dc3545; /* Rojo */
-            display: none; /* Inicialmente oculto */
-        }
+
         .right-panel .search-bar {
             display: flex;
             margin-bottom: 15px;
+            gap: 10px;
         }
         .right-panel .search-bar input[type="text"] {
             flex-grow: 1;
             padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
+            border-radius: 4px;
         }
         .right-panel .search-bar button {
             padding: 8px 12px;
             background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 0 4px 4px 0;
+            border-radius: 4px;
             cursor: pointer;
         }
         table {
@@ -131,10 +146,9 @@
             padding: 20px;
             color: #888;
         }
-        /* Estilo para la fila seleccionada */
         .selected-row {
-            background-color: #e0f7fa !important; /* Un color más claro para resaltar */
-            border: 1px solid #00bcd4; /* Borde para el resaltado */
+            background-color: #e0f7fa !important;
+            border: 1px solid #00bcd4;
         }
     </style>
 </head>
@@ -143,128 +157,108 @@
         <div class="left-panel">
             <h2>Detalles del Buque</h2>
             <div class="form-group">
-                <label for="shipName">Nombre:</label>
-                <input type="text" id="shipName">
+                <label for="buqueNombre">Nombre:</label>
+                <input type="text" id="buqueNombre">
             </div>
             <div class="form-group">
-                <label for="shipMatricula">Matrícula:</label>
-                <input type="text" id="shipMatricula">
+                <label for="buqueMatricula">Matrícula:</label>
+                <input type="text" id="buqueMatricula">
             </div>
             <div class="form-group">
-                <label for="shipType">Tipo de Buque:</label>
-                <select id="shipType">
-                    <!-- Las opciones se cargarán dinámicamente desde la API -->
+                <label for="buqueCapacidad">Capacidad (Toneladas):</label>
+                <input type="number" id="buqueCapacidad" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="buqueTipo">Tipo de Buque:</label>
+                <select id="buqueTipo">
                     <option value="">Cargando tipos...</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="shipCapacity">Capacidad (Toneldas):</label>
-                <input type="number" id="shipCapacity" step="any">
-            </div>
             <div class="buttons-container">
-                <button id="registerShipBtn">Registrar buque</button>
+                <button id="registerBuqueBtn">Registrar buque</button>
                 <button id="saveChangesBtn">Guardar cambios</button>
-                <button id="deleteShipBtn">Eliminar</button>
+                <button id="deleteBuqueBtn">Eliminar buque</button>
             </div>
         </div>
 
         <div class="right-panel">
-            <h2>Listado de Buques</h2>
+            <div class="right-panel-header">
+                <h2>Listado de Buques</h2>
+                <button id="returnToMainBtn">Regresar</button>
+            </div>
             <div class="search-bar">
                 <input type="text" id="searchMatricula" placeholder="Buscar por Matrícula">
                 <button id="searchBtn">Buscar</button>
             </div>
-            <div id="shipTableContainer">
-                <table id="shipTable">
+            <div id="buqueTableContainer">
+                <table id="buqueTable">
                     <thead>
                         <tr>
                             <th>Nombre</th>
                             <th>Matrícula</th>
+                            <th>Capacidad (Ton)</th>
                             <th>Tipo</th>
-                            <th>Capacidad</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!-- Los datos de los buques se insertarán aquí con JavaScript -->
                     </tbody>
                 </table>
-                <p id="noShipsMessage" class="no-data">No hay buques registrados.</p>
+                <p id="noBuquesMessage" class="no-data">No hay buques registrados.</p>
             </div>
         </div>
     </div>
 
     <script>
-        // ----------------------------------------------------
-        // 1. Obtención de Elementos del DOM (Referencia a los elementos HTML)
-        // ----------------------------------------------------
-        const shipNameInput = document.getElementById('shipName');
-        const shipMatriculaInput = document.getElementById('shipMatricula');
-        const shipTypeSelect = document.getElementById('shipType'); // Este es el select para el tipo de buque
-        const shipCapacityInput = document.getElementById('shipCapacity');
+        const buqueNombreInput = document.getElementById('buqueNombre');
+        const buqueMatriculaInput = document.getElementById('buqueMatricula');
+        const buqueCapacidadInput = document.getElementById('buqueCapacidad');
+        const buqueTipoSelect = document.getElementById('buqueTipo');
 
-        const registerShipBtn = document.getElementById('registerShipBtn');
+        const registerBuqueBtn = document.getElementById('registerBuqueBtn');
         const saveChangesBtn = document.getElementById('saveChangesBtn');
-        const deleteShipBtn = document.getElementById('deleteShipBtn');
+        const deleteBuqueBtn = document.getElementById('deleteBuqueBtn');
+        const returnToMainBtn = document.getElementById('returnToMainBtn');
 
-        const shipTableBody = document.querySelector('#shipTableContainer tbody');
-        const noShipsMessage = document.getElementById('noShipsMessage');
-        const shipTable = document.querySelector('#shipTableContainer table');
+        const buqueTableBody = document.querySelector('#buqueTableContainer tbody');
+        const noBuquesMessage = document.getElementById('noBuquesMessage');
+        const buqueTable = document.querySelector('#buqueTableContainer table');
 
         const searchMatriculaInput = document.getElementById('searchMatricula');
         const searchBtn = document.getElementById('searchBtn');
 
-        // Estado local para la fila seleccionada (ahora almacenaremos la matrícula y el elemento TR)
         let selectedBuqueMatricula = null;
         let selectedRowElement = null;
 
-        // Base URL de tu API (ajusta si tu proyecto no está en '/buques/' en urls.py principal)
-        // Por ejemplo, si tu path en tu urls.py principal es path('', include('buque_app.urls')),
-        // entonces API_BASE_URL debería ser '/api'.
         const API_BASE_URL = '/buques/api';
 
-
-        // ----------------------------------------------------
-        // 2. Funciones de Utilidad y UI
-        // ----------------------------------------------------
-
-        // Función para limpiar el formulario y restablecer el estado de selección
         function clearForm() {
-            shipNameInput.value = '';
-            shipMatriculaInput.value = '';
-            shipTypeSelect.value = ''; // Vaciar el select
-            shipCapacityInput.value = '';
-            selectedBuqueMatricula = null; // Reiniciar la matrícula del buque seleccionado
-            // Quitar resaltado de la fila seleccionada si existe
+            buqueNombreInput.value = '';
+            buqueMatriculaInput.value = '';
+            buqueCapacidadInput.value = '';
+            buqueTipoSelect.value = '';
+            selectedBuqueMatricula = null;
             if (selectedRowElement) {
                 selectedRowElement.classList.remove('selected-row');
                 selectedRowElement = null;
             }
-            resetButtons(); // Restablecer la visibilidad de los botones
+            resetButtons();
         }
 
-        // Función para restablecer los botones a su estado inicial (Registrar visible, otros ocultos)
         function resetButtons() {
-            registerShipBtn.style.display = 'inline-block'; // Muestra el botón de registrar
-            saveChangesBtn.style.display = 'none';    // Oculta el de guardar cambios
-            deleteShipBtn.style.display = 'none';     // Oculta el de eliminar
-            shipMatriculaInput.readOnly = false; // Permitir editar la matrícula para nuevos registros
+            registerBuqueBtn.style.display = 'inline-block';
+            saveChangesBtn.style.display = 'none';
+            deleteBuqueBtn.style.display = 'none';
+            buqueMatriculaInput.readOnly = false;
         }
 
-        // Función para cambiar los botones a modo edición (Registrar oculto, otros visibles)
         function setEditButtons() {
-            registerShipBtn.style.display = 'none';         // Oculta el botón de registrar
-            saveChangesBtn.style.display = 'inline-block';   // Muestra el de guardar cambios
-            deleteShipBtn.style.display = 'inline-block';    // Muestra el de eliminar
-            shipMatriculaInput.readOnly = true; // Bloquear edición de matrícula en modo edición
+            registerBuqueBtn.style.display = 'none';
+            saveChangesBtn.style.display = 'inline-block';
+            deleteBuqueBtn.style.display = 'inline-block';
+            buqueMatriculaInput.readOnly = true;
         }
 
-        // Valida que la capacidad sea un número válido (entero o decimal)
-        function isValidCapacity(value) {
-            const num = parseFloat(value);
-            return !isNaN(num) && isFinite(num) && value.trim() !== '';
-        }
-
-        // Muestra un mensaje de alerta (ejemplo simple, en producción usarías un modal o div de mensajes)
         function showMessage(message, isError = false) {
             alert(message);
             if (isError) {
@@ -274,299 +268,318 @@
             }
         }
 
-
-        // ----------------------------------------------------
-        // 3. Funciones de Interacción con la API (AJAX con fetch)
-        // ----------------------------------------------------
-
-        // Obtener todos los buques de la API y renderizar la tabla
         async function fetchAndRenderBuques() {
+            console.log("Fetch and render buques...");
             try {
                 const response = await fetch(`${API_BASE_URL}/buques/`);
                 if (!response.ok) {
                     throw new Error(`Error HTTP! Estado: ${response.status}`);
                 }
                 const buques = await response.json();
+                console.log("Buques obtenidos:", buques);
                 renderTable(buques);
             } catch (error) {
                 showMessage(`Error al cargar buques: ${error.message}. Asegúrate de que el servidor Django esté corriendo y las URLs sean correctas.`, true);
             }
         }
 
-        // Obtener los tipos de buque de la API y poblar el campo select
-        async function populateShipTypes() {
+        async function populateTiposBuque() {
+            console.log("Populating tipos de buque...");
             try {
                 const response = await fetch(`${API_BASE_URL}/tipos-buque/`);
                 if (!response.ok) {
                     throw new Error(`Error HTTP! Estado: ${response.status}`);
                 }
-                const tiposBuque = await response.json();
+                const tipos = await response.json();
+                console.log("Tipos de buque obtenidos de la API:", tipos); 
 
-                shipTypeSelect.innerHTML = '<option value="">Seleccione un tipo</option>'; // Opción por defecto
-                tiposBuque.forEach(tipo => {
-                    const option = document.createElement('option');
-                    option.value = tipo.id; // El valor será el ID del tipo de buque (lo que espera el backend)
-                    option.textContent = tipo.nombre; // El texto visible será el nombre del tipo
-                    shipTypeSelect.appendChild(option);
-                });
+                buqueTipoSelect.innerHTML = '<option value="">Seleccione un tipo</option>';
+
+                if (tipos.length === 0) {
+                    const noDataOption = document.createElement('option');
+                    noDataOption.value = '';
+                    noDataOption.textContent = 'No hay tipos de buque disponibles. Añade algunos en tu DB.';
+                    noDataOption.disabled = true;
+                    buqueTipoSelect.appendChild(noDataOption);
+                    showMessage("Advertencia: No se encontraron tipos de buque en la base de datos. Por favor, añada algunos.", true);
+                    console.warn("No hay tipos de buque disponibles en la DB.");
+                } else {
+                    tipos.forEach(tipo => {
+                        const option = document.createElement('option');
+                        option.value = tipo.id;
+                        option.textContent = tipo.nombre.trim();
+                        buqueTipoSelect.appendChild(option);
+                    });
+                    console.log("Select de tipo de buque poblado.");
+                    console.log("Valor inicial del select de tipo de buque:", buqueTipoSelect.value);
+                    console.log("Opciones actuales en el select de tipo de buque:", Array.from(buqueTipoSelect.options).map(opt => ({value: opt.value, text: opt.textContent})));
+                }
             } catch (error) {
-                showMessage(`Error al cargar tipos de buque: ${error.message}. Verifica la URL de la API de tipos.`, true);
+                showMessage(`Error al cargar tipos de buque: ${error.message}.`, true);
+                console.error("Error en populateTiposBuque:", error);
             }
         }
 
-        // Renderiza la tabla de buques con los datos recibidos de la API
         function renderTable(buques) {
-            shipTableBody.innerHTML = ''; // Limpiar tabla
+            buqueTableBody.innerHTML = '';
             if (buques.length === 0) {
-                noShipsMessage.style.display = 'block';
-                shipTable.style.display = 'none';
+                noBuquesMessage.style.display = 'block';
+                buqueTable.style.display = 'none';
             } else {
-                noShipsMessage.style.display = 'none';
-                shipTable.style.display = 'table';
+                noBuquesMessage.style.display = 'none';
+                buqueTable.style.display = 'table';
                 buques.forEach(buque => {
                     const row = document.createElement('tr');
-                    // Almacenar la matrícula en el dataset para fácil recuperación
-                    row.dataset.matricula = buque.matricula;
+                    row.dataset.matricula = buque.matricula.trim(); // Trim al guardar en dataset
                     row.innerHTML = `
                         <td>${buque.nombre}</td>
-                        <td>${buque.matricula}</td>
-                        <td>${buque.tipo_buque_nombre}</td> <!-- Mostrar el nombre del tipo de buque -->
-                        <td>${buque.capacidad_toneladas}</td>
+                        <td>${buque.matricula.trim()}</td> <!-- Trim al mostrar en tabla -->
+                        <td>${buque.capacidad}</td>
+                        <td>${buque.tipo_nombre.trim()}</td>
                     `;
-                    // Añadir el evento click para seleccionar la fila
                     row.addEventListener('click', () => selectRow(row));
-                    shipTableBody.appendChild(row);
+                    buqueTableBody.appendChild(row);
                 });
             }
-            clearForm(); // Siempre limpiar formulario después de renderizar tabla
+            clearForm();
         }
 
-        // Selecciona una fila, obtiene los detalles del buque de la API y rellena el formulario
         async function selectRow(row) {
-            // Quitar resaltado de la fila previamente seleccionada
+            console.log("--- Fila seleccionada para editar ---");
+            console.log("Matrícula de la fila seleccionada (dataset.matricula):", row.dataset.matricula);
+
             if (selectedRowElement) {
                 selectedRowElement.classList.remove('selected-row');
             }
-            // Asignar la nueva fila seleccionada y añadir resaltado
             selectedRowElement = row;
             selectedRowElement.classList.add('selected-row');
 
-            // Obtener la matrícula del buque seleccionado de la fila
-            selectedBuqueMatricula = row.dataset.matricula;
+            // Asegurarse de que la matrícula almacenada no tenga espacios extra
+            selectedBuqueMatricula = row.dataset.matricula.trim(); 
+            console.log("Matrícula almacenada para edición (selectedBuqueMatricula):", selectedBuqueMatricula);
+
 
             try {
-                // Hacer una solicitud GET a la API para obtener los detalles del buque
-                const response = await fetch(`${API_BASE_URL}/buques/${selectedBuqueMatricula}/`);
+                // Usar la matrícula sin espacios en la URL de GET
+                const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(selectedBuqueMatricula)}/`);
                 if (!response.ok) {
-                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                    // Si el servidor devuelve 404 a pesar de que selectedBuqueMatricula existe,
+                    // podría ser un problema con el %20 o que el servidor no lo maneja bien.
+                    throw new Error(`Error HTTP! Estado: ${response.status}. URL solicitada: ${API_BASE_URL}/buques/${selectedBuqueMatricula}/`);
                 }
                 const buque = await response.json();
+                console.log("Detalles del buque obtenidos de la API para edición:", buque);
+                console.log("ID del tipo de buque obtenido (buque.tipo_id):", buque.tipo_id);
 
-                // Rellenar los campos del formulario con los detalles del buque
-                shipNameInput.value = buque.nombre;
-                shipMatriculaInput.value = buque.matricula;
-                shipTypeSelect.value = buque.tipo_buque_id; // Rellenar con el ID del tipo (para el select)
-                shipCapacityInput.value = buque.capacidad_toneladas;
+                buqueNombreInput.value = buque.nombre;
+                buqueMatriculaInput.value = buque.matricula.trim(); // Asegurarse de trimear al cargar en el input
+                buqueCapacidadInput.value = buque.capacidad;
+                buqueTipoSelect.value = buque.tipo_id; 
+                
+                if (buqueTipoSelect.value !== String(buque.tipo_id)) {
+                    console.warn(`ADVERTENCIA: El valor '${buque.tipo_id}' no pudo ser asignado correctamente al select. El valor actual es '${buqueTipoSelect.value}'. Las opciones disponibles son:`, Array.from(buqueTipoSelect.options).map(opt => ({value: opt.value, text: opt.textContent})));
+                } else {
+                    console.log(`Valor '${buque.tipo_id}' asignado correctamente al select de tipo de buque.`);
+                }
 
-                setEditButtons(); // Cambiar los botones a modo edición (Guardar cambios, Eliminar)
+                setEditButtons();
             } catch (error) {
-                showMessage(`Error al cargar detalles del buque: ${error.message}`, true);
-                clearForm(); // Limpiar el formulario si falla la carga
+                showMessage(`Error al cargar detalles del buque para edición: ${error.message}`, true);
+                console.error("Error en selectRow:", error);
+                clearForm();
             }
         }
 
 
-        // ----------------------------------------------------
-        // 4. Manejadores de Eventos (Botones y Búsqueda)
-        // ----------------------------------------------------
+        registerBuqueBtn.addEventListener('click', async () => {
+            const nombre = buqueNombreInput.value.trim();
+            const matricula = buqueMatriculaInput.value.trim();
+            const capacidad = buqueCapacidadInput.value;
+            const id_tipo = buqueTipoSelect.value;
 
-        // Manejador para el botón "Registrar buque"
-        registerShipBtn.addEventListener('click', async () => {
-            const nombre = shipNameInput.value.trim();
-            const matricula = shipMatriculaInput.value.trim();
-            const tipo_buque_id = shipTypeSelect.value; // Obtenemos el ID del tipo de buque seleccionado
-            const capacidad_toneladas = shipCapacityInput.value.trim();
+            console.log("--- Intentando REGISTRAR buque ---");
+            console.log("Nombre:", nombre);
+            console.log("Matrícula:", matricula);
+            console.log("Capacidad:", capacidad);
+            console.log("ID Tipo Buque (seleccionado):", id_tipo);
+            console.log("Tipo de buque seleccionado (texto visible):", buqueTipoSelect.options[buqueTipoSelect.selectedIndex].text);
 
-            // Validaciones básicas del lado del cliente
-            if (!nombre || !matricula || !tipo_buque_id || !capacidad_toneladas) {
-                showMessage('Por favor, complete todos los campos.', true);
+            if (!nombre || !matricula || capacidad === '' || id_tipo === "" || id_tipo === null) {
+                showMessage('Por favor, complete todos los campos y seleccione un tipo de buque válido.', true);
+                console.error("Validación fallida en el cliente (registro). id_tipo es:", id_tipo);
                 return;
             }
-            if (!isValidCapacity(capacidad_toneladas)) {
-                showMessage('Por favor, ingrese una capacidad válida (número entero o decimal).', true);
-                return;
-            }
 
-            // Datos a enviar al backend en formato JSON
             const dataToSend = {
                 nombre: nombre,
                 matricula: matricula,
-                tipo_buque: tipo_buque_id, // Enviamos el ID del tipo de buque
-                capacidad_toneladas: parseFloat(capacidad_toneladas)
+                capacidad_toneladas: parseFloat(capacidad),
+                tipo_buque: id_tipo, 
             };
+            console.log("JSON a enviar al servidor (registro):", dataToSend);
 
             try {
-                // Realizar una solicitud POST a la API para crear un buque
                 const response = await fetch(`${API_BASE_URL}/buques/`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Para producción: 'X-CSRFToken': getCookie('csrftoken'), // Descomentar y usar función para obtener CSRF token
-                    },
-                    body: JSON.stringify(dataToSend) // Convertir el objeto a una cadena JSON
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSend)
                 });
 
-                const result = await response.json(); // Leer la respuesta JSON del servidor
-                if (response.ok) { // Si la respuesta HTTP es 2xx (éxito)
+                const result = await response.json();
+                console.log("--- Respuesta del servidor (REGISTRO) ---");
+                console.log("Status HTTP de la respuesta:", response.status);
+                console.log("Respuesta del servidor (JSON):", result);
+
+                if (response.ok) {
                     showMessage('Buque registrado exitosamente.');
-                    fetchAndRenderBuques(); // Volver a cargar y renderizar la tabla desde la API
-                } else { // Si la respuesta HTTP indica un error
+                    fetchAndRenderBuques();
+                } else {
                     let errorMessage = 'Error al registrar buque.';
-                    // Mensajes de error más amigables basados en la respuesta del backend
-                    if (result.matricula && result.matricula.includes('buque with this matricula already exists.')) {
-                        errorMessage = 'Ya existe un buque con esta matrícula. Por favor, use una única.';
-                    } else if (result.capacidad_toneladas && result.capacidad_toneladas.includes('Enter a number.')) {
-                        errorMessage = 'La capacidad debe ser un número.';
+                    if (result.matricula && result.matricula.includes('already exists')) {
+                        errorMessage = 'Ya existe un buque con esta matrícula.';
                     } else {
                         errorMessage += ' Detalles: ' + JSON.stringify(result);
                     }
                     showMessage(errorMessage, true);
                 }
             } catch (error) {
-                showMessage(`Error de conexión al registrar buque: ${error.message}. Verifique el servidor.`, true);
+                showMessage(`Error de conexión al registrar buque: ${error.message}.`, true);
+                console.error("Error en el fetch POST de registro:", error);
             }
         });
 
-
-        // Manejador para el botón "Guardar cambios"
         saveChangesBtn.addEventListener('click', async () => {
+            console.log("--- Intentando GUARDAR CAMBIOS del buque ---");
             if (!selectedBuqueMatricula) {
                 showMessage('Ningún buque seleccionado para guardar cambios.', true);
+                console.warn("selectedBuqueMatricula es null al intentar guardar cambios.");
                 return;
             }
 
-            const nombre = shipNameInput.value.trim();
-            const matricula = shipMatriculaInput.value.trim(); // La matrícula se usa para identificar, no se edita en este modo
-            const tipo_buque_id = shipTypeSelect.value;
-            const capacidad_toneladas = shipCapacityInput.value.trim();
+            const matricula_for_url = selectedBuqueMatricula; 
+            const nombre = buqueNombreInput.value.trim();
+            const capacidad = buqueCapacidadInput.value;
+            const id_tipo = buqueTipoSelect.value;
 
-            // Validaciones básicas del lado del cliente
-            if (!nombre || !matricula || !tipo_buque_id || !capacidad_toneladas) {
-                showMessage('Por favor, complete todos los campos.', true);
+            console.log("Matrícula para URL (edición):", matricula_for_url);
+            console.log("Nombre (editado):", nombre);
+            console.log("Capacidad (editada):", capacidad);
+            console.log("ID Tipo Buque (seleccionado para edición):", id_tipo);
+
+            if (!nombre || capacidad === '' || id_tipo === "" || id_tipo === null) {
+                showMessage('Por favor, complete todos los campos (excepto matrícula, que no se edita directamente) y seleccione un tipo de buque válido.', true);
+                console.error("Validación fallida en el cliente (edición). id_tipo es:", id_tipo);
                 return;
             }
-            if (!isValidCapacity(capacidad_toneladas)) {
-                showMessage('Por favor, ingrese una capacidad válida (número entero o decimal).', true);
-                return;
-            }
 
-            // Datos a enviar al backend
             const dataToSend = {
                 nombre: nombre,
-                matricula: matricula, // La matrícula no se envía como parte del PUT en el path, pero si el backend la espera en el body
-                tipo_buque: tipo_buque_id,
-                capacidad_toneladas: parseFloat(capacidad_toneladas)
+                matricula: matricula_for_url, // ¡CORRECCIÓN CLAVE! Incluir la matrícula aquí.
+                capacidad_toneladas: parseFloat(capacidad),
+                tipo_buque: id_tipo, 
             };
+            console.log("JSON a enviar al servidor (edición):", dataToSend);
+
 
             try {
-                // Realizar una solicitud PUT a la API para actualizar un buque específico
-                const response = await fetch(`${API_BASE_URL}/buques/${selectedBuqueMatricula}/`, {
+                // Asegurarse de que la matrícula en la URL esté limpia de espacios y codificada
+                const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(matricula_for_url)}/`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Para producción: 'X-CSRFToken': getCookie('csrftoken'),
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataToSend)
                 });
 
                 const result = await response.json();
-                if (response.ok) { // Si la respuesta HTTP es 2xx (éxito)
+                console.log("--- Respuesta del servidor (EDICIÓN) ---");
+                console.log("Status HTTP de la respuesta:", response.status);
+                console.log("Respuesta del servidor (JSON):", result);
+
+                if (response.ok) {
                     showMessage('Cambios guardados exitosamente.');
-                    fetchAndRenderBuques(); // Recargar la tabla para mostrar los cambios
-                } else { // Si la respuesta HTTP indica un error
+                    fetchAndRenderBuques();
+                } else {
                     showMessage('Error al guardar cambios. Detalles: ' + JSON.stringify(result), true);
                 }
             } catch (error) {
-                showMessage(`Error de conexión al guardar cambios: ${error.message}. Verifique el servidor.`, true);
+                showMessage(`Error de conexión al guardar cambios: ${error.message}.`, true);
+                console.error("Error en el fetch PUT de edición:", error);
             }
         });
 
-
-        // Manejador para el botón "Eliminar"
-        deleteShipBtn.addEventListener('click', async () => {
+        deleteBuqueBtn.addEventListener('click', async () => {
+            console.log("--- Intentando ELIMINAR buque ---");
             if (!selectedBuqueMatricula) {
                 showMessage('Ningún buque seleccionado para eliminar.', true);
+                console.warn("selectedBuqueMatricula es null al intentar eliminar.");
                 return;
             }
 
-            // Pedir confirmación al usuario
-            if (!confirm(`¿Está seguro de que desea eliminar el buque con matrícula ${selectedBuqueMatricula}?`)) {
-                return; // Si el usuario cancela, no hacer nada
+            const matricula_for_url = selectedBuqueMatricula;
+            console.log("Matrícula del buque a eliminar:", matricula_for_url);
+
+            if (!confirm(`¿Está seguro de que desea eliminar el buque con matrícula ${matricula_for_url}?`)) {
+                console.log("Eliminación cancelada por el usuario.");
+                return;
             }
 
             try {
-                // Realizar una solicitud DELETE a la API para eliminar un buque específico
-                const response = await fetch(`${API_BASE_URL}/buques/${selectedBuqueMatricula}/`, {
+                // Asegurarse de que la matrícula en la URL esté limpia de espacios y codificada
+                const response = await fetch(`${API_BASE_URL}/buques/${encodeURIComponent(matricula_for_url)}/`, {
                     method: 'DELETE',
-                    headers: {
-                        // Para producción: 'X-CSRFToken': getCookie('csrftoken'),
-                    },
                 });
 
-                if (response.ok) { // Si la respuesta HTTP es 204 (No Content) o 2xx
+                console.log("--- Respuesta del servidor (ELIMINACIÓN) ---");
+                console.log("Status HTTP de la respuesta:", response.status);
+
+                if (response.ok) {
                     showMessage('Buque eliminado exitosamente.');
-                    fetchAndRenderBuques(); // Recargar la tabla para reflejar la eliminación
-                } else { // Si la respuesta HTTP indica un error
-                    const result = await response.json(); // Intentar leer el error si hay un cuerpo JSON
+                    fetchAndRenderBuques();
+                } else {
+                    const result = await response.json();
                     showMessage('Error al eliminar buque. Detalles: ' + JSON.stringify(result), true);
+                    console.error("Error en la eliminación. Respuesta JSON:", result);
                 }
             } catch (error) {
-                showMessage(`Error de conexión al eliminar buque: ${error.message}. Verifique el servidor.`, true);
+                showMessage(`Error de conexión al eliminar buque: ${error.message}.`, true);
+                console.error("Error en el fetch DELETE:", error);
             }
         });
 
-
-        // Manejador para el botón "Buscar" (Filtra la tabla localmente)
         searchBtn.addEventListener('click', () => {
+            console.log("--- Ejecutando búsqueda ---");
             const searchTerm = searchMatriculaInput.value.trim().toLowerCase();
-            const rows = shipTableBody.querySelectorAll('tr'); // Obtener todas las filas actuales en la tabla
+            console.log("Término de búsqueda (normalizado):", searchTerm);
+            const rows = buqueTableBody.querySelectorAll('tr');
+            let found = false;
 
             rows.forEach(row => {
-                const matriculaCellContent = row.children[1].textContent.toLowerCase(); // La matrícula está en la segunda celda
+                // Comparar la matrícula de la fila (ya trimeada en renderTable)
+                const matriculaCellContent = row.dataset.matricula.toLowerCase(); // Usar dataset.matricula para la comparación
+                console.log(`Comparando matrícula de la fila '${matriculaCellContent}' con término '${searchTerm}'`);
                 if (matriculaCellContent.includes(searchTerm)) {
-                    row.style.display = ''; // Mostrar la fila si coincide
+                    row.style.display = '';
+                    found = true;
                 } else {
-                    row.style.display = 'none'; // Ocultar la fila si no coincide
+                    row.style.display = 'none';
                 }
             });
-            // Considera añadir un botón "Limpiar búsqueda" para volver a mostrar todas las filas
+
+            if (!found && searchTerm !== "") {
+                showMessage(`No se encontraron buques con la matrícula '${searchTerm}'.`, true);
+            } else if (searchTerm === "") {
+                 showMessage("Se muestran todos los buques.", false);
+            }
+            console.log("Búsqueda completada.");
         });
 
-        // Opcional: Función para obtener el token CSRF de las cookies (necesario para producción)
-        // function getCookie(name) {
-        //     let cookieValue = null;
-        //     if (document.cookie && document.cookie !== '') {
-        //         const cookies = document.cookie.split(';');
-        //         for (let i = 0; i < cookies.length; i++) {
-        //             const cookie = cookies[i].trim();
-        //             if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        //                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        //                 break;
-        //             }
-        //         }
-        //     }
-        //     return cookieValue;
-        // }
-
 
         // ----------------------------------------------------
-        // 5. Inicialización de la Aplicación (Cuando la página carga)
+        // 5. Inicialización de la Aplicación
         // ----------------------------------------------------
 
-        // Se ejecuta cuando el contenido HTML de la página está completamente cargado
         document.addEventListener('DOMContentLoaded', () => {
-            populateShipTypes(); // Primero, carga los tipos de buque para rellenar el select
-            fetchAndRenderBuques(); // Luego, carga y renderiza los buques existentes en la tabla
+            populateTiposBuque();
+            fetchAndRenderBuques();
         });
 
     </script>

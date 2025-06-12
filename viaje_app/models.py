@@ -1,113 +1,74 @@
 from django.db import models
 
 class TipoBuque(models.Model):
+    # ID_TIPO en DB, ahora mapeado a 'id_tipo' en minúsculas
     id_tipo = models.AutoField(db_column='id_tipo', primary_key=True)
-    tipo_buque = models.CharField(db_column='tipo_buque', max_length=20)
+    # TIPO_BUQUE en DB, ahora mapeado a 'tipo_buque' en minúsculas
+    tipo_buque = models.CharField(db_column='tipo_buque', max_length=15, unique=True)
 
     class Meta:
         managed = False
-        db_table = 'tipo_buque'
+        db_table = 'tipo_buque' # Ya estaba en minúsculas
         verbose_name = "Tipo de Buque"
         verbose_name_plural = "Tipos de Buque"
-        ordering = ['tipo_buque']
 
-    def __str__(self):
-        return self.tipo_buque
-
+    def __str__(self): return self.tipo_buque
 
 class Buque(models.Model):
+    # ID_BUQUE en DB, ahora mapeado a 'id_buque' en minúsculas
     id_buque = models.AutoField(db_column='id_buque', primary_key=True)
-    id_tipo = models.ForeignKey('TipoBuque', models.PROTECT, db_column='id_tipo')
-    nombre_buque = models.CharField(db_column='nombre_buque', max_length=50)
-    matricula = models.CharField(db_column='matricula', max_length=10)
-    capacidad = models.FloatField(db_column='capacidad')
+    # ID_TIPO en DB (Foreign Key), ahora mapeado a 'id_tipo' en minúsculas
+    tipo_buque = models.ForeignKey(TipoBuque, models.PROTECT, db_column='id_tipo', verbose_name="Tipo de Buque", related_name='buques_asociados')
+    # NOMBRE_BUQUE en DB, ahora mapeado a 'nombre_buque' en minúsculas
+    nombre = models.CharField(db_column='nombre_buque', max_length=100, verbose_name="Nombre del Buque")
+    # MATRICULA en DB, ahora mapeado a 'matricula' en minúsculas
+    matricula = models.CharField(db_column='matricula', max_length=50, unique=True, verbose_name="Matrícula")
+    # CAPACIDAD en DB, ahora mapeado a 'capacidad' en minúsculas
+    capacidad_toneladas = models.FloatField(db_column='capacidad', verbose_name="Capacidad (Toneldas)")
 
     class Meta:
         managed = False
-        db_table = 'buque'
+        db_table = 'buque' # Ya estaba en minúsculas
         verbose_name = "Buque"
         verbose_name_plural = "Buques"
-        ordering = ['nombre_buque']
+        ordering = ['nombre']
 
-    def __str__(self):
-        return f"{self.nombre_buque} ({self.matricula})"
-
-
-class CategoriaProducto(models.Model):
-    id_categoria = models.AutoField(db_column='id_categoria', primary_key=True)
-    nombre_categoria = models.CharField(db_column='nombre_categoria', max_length=20)
-
-    class Meta:
-        managed = False
-        db_table = 'categoria_producto'
-        verbose_name = "Categoría de Producto"
-        verbose_name_plural = "Categorías de Producto"
-        ordering = ['nombre_categoria']
-
-    def __str__(self):
-        return self.nombre_categoria
-
+    def __str__(self): return f"{self.nombre} ({self.matricula})"
 
 class EstadoViaje(models.Model):
+    # ID_ESTADO en DB, ahora mapeado a 'id_estado' en minúsculas
     id_estado = models.AutoField(db_column='id_estado', primary_key=True)
+    # ESTADO_VIAJE en DB, ahora mapeado a 'estado_viaje' en minúsculas
     estado_viaje = models.CharField(db_column='estado_viaje', max_length=20)
 
     class Meta:
         managed = False
-        db_table = 'estado_viaje'
-        verbose_name = "Estado del Viaje"
-        verbose_name_plural = "Estados del Viaje"
-        ordering = ['id_estado']
+        db_table = 'estado_viaje' # <--- CAMBIADO A MINÚSCULAS
+        verbose_name = "Estado de Viaje"
+        verbose_name_plural = "Estados de Viaje"
 
-    def __str__(self):
-        return self.estado_viaje
-
-
-class UnidadMedida(models.Model):
-    id_unidad_medida = models.AutoField(db_column='id_unidad_medida', primary_key=True)
-    nombre_unidad_medida = models.CharField(db_column='nombre_unidad_medida', max_length=20)
-
-    class Meta:
-        managed = False
-        db_table = 'unidad_medida'
-        verbose_name = "Unidad de Medida"
-        verbose_name_plural = "Unidades de Medida"
-        ordering = ['nombre_unidad_medida']
-
-    def __str__(self):
-        return self.nombre_unidad_medida
-
-
-class Producto(models.Model):
-    id_producto = models.AutoField(db_column='id_producto', primary_key=True)
-    id_unidad_medida = models.ForeignKey('UnidadMedida', models.PROTECT, db_column='id_unidad_medida')
-    id_categoria = models.ForeignKey('CategoriaProducto', models.PROTECT, db_column='id_categoria')
-    nombre_producto = models.CharField(db_column='nombre_producto', max_length=20)
-    url_foto = models.CharField(db_column='url_foto', max_length=500)
-
-    class Meta:
-        managed = False
-        db_table = 'producto'
-        verbose_name = "Producto"
-        verbose_name_plural = "Productos"
-        ordering = ['nombre_producto']
-
-    def __str__(self):
-        return self.nombre_producto
-
+    def __str__(self): return self.estado_viaje
 
 class Viaje(models.Model):
+    # ID_VIAJE en DB, ahora mapeado a 'id_viaje' en minúsculas
     id_viaje = models.AutoField(db_column='id_viaje', primary_key=True)
-    id_estado = models.ForeignKey('EstadoViaje', models.PROTECT, db_column='id_estado')
-    id_buque = models.ForeignKey('Buque', models.PROTECT, db_column='id_buque')
-    codigo_viaje = models.IntegerField(db_column='codigo_viaje')
-    fecha_inicio = models.DateField(db_column='fecha_inicio')
-    fecha_fin = models.DateField(db_column='fecha_fin')
-    destino = models.CharField(db_column='destino', max_length=50)
+    # ID_ESTADO en DB (Foreign Key), ahora mapeado a 'id_estado' en minúsculas
+    id_estado = models.ForeignKey(EstadoViaje, models.PROTECT, db_column='id_estado', verbose_name="Estado del Viaje")
+    # ID_BUQUE en DB (Foreign Key), ahora mapeado a 'id_buque' en minúsculas
+    id_buque = models.ForeignKey(Buque, models.PROTECT, db_column='id_buque', verbose_name="Buque Asignado")
+    
+    # CODIGO_VIAJE en DB, ahora mapeado a 'codigo_viaje' en minúsculas
+    codigo_viaje = models.IntegerField(db_column='codigo_viaje', unique=True, verbose_name="Código de Viaje")
+    # FECHA_INICIO en DB, ahora mapeado a 'fecha_inicio' en minúsculas
+    fecha_inicio = models.DateField(db_column='fecha_inicio', verbose_name="Fecha de Inicio")
+    # FECHA_FIN en DB, ahora mapeado a 'fecha_fin' en minúsculas
+    fecha_fin = models.DateField(db_column='fecha_fin', verbose_name="Fecha de Fin")
+    # DESTINO en DB, ahora mapeado a 'destino' en minúsculas
+    destino = models.CharField(db_column='destino', max_length=50, verbose_name="Destino")
 
     class Meta:
         managed = False
-        db_table = 'viaje'
+        db_table = 'viaje' # <--- CAMBIADO A MINÚSCULAS
         verbose_name = "Viaje"
         verbose_name_plural = "Viajes"
         ordering = ['fecha_inicio']
@@ -115,20 +76,3 @@ class Viaje(models.Model):
     def __str__(self):
         return f"Viaje {self.codigo_viaje} - {self.destino}"
 
-
-class Inventario(models.Model):
-    id_inventario = models.AutoField(db_column='id_inventario', primary_key=True)
-    id_viaje = models.ForeignKey('Viaje', models.PROTECT, db_column='id_viaje')
-    id_producto = models.ForeignKey('Producto', models.PROTECT, db_column='id_producto')
-    nivel_minimo = models.IntegerField(db_column='nivel_minimo')
-    cantidad_disponible = models.IntegerField(db_column='cantidad_disponible')
-
-    class Meta:
-        managed = False
-        db_table = 'inventario'
-        verbose_name = "Inventario"
-        verbose_name_plural = "Inventarios"
-        ordering = ['id_viaje', 'id_producto']
-
-    def __str__(self):
-        return f"{self.id_producto} en viaje {self.id_viaje}"

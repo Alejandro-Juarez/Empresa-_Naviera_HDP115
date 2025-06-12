@@ -38,7 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'buque_app',
+    'productos_app',
     'viaje_app',
+    'inventario_app',
+    'login',
+    'administrador_app',
+    'consumo_app',
+
 ]
 
 
@@ -57,7 +63,7 @@ ROOT_URLCONF = 'naviera_web.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,16 +82,19 @@ WSGI_APPLICATION = 'naviera_web.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # Toda la aplicación (Django auth/admin y tus apps) usará esta única base de datos.
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pruebas',
-        'USER': 'postgres',
-        'PASSWORD': 'admin21003',
-        'HOST': 'localhost',  
+        'NAME': 'pruebas',          # Tu base de datos actual y única
+        'USER': 'postgres',         # Tu usuario actual
+        'PASSWORD': 'admin21003',   # Tu contraseña actual
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
 
+# Define el enrutador de base de datos para controlar las migraciones de tus apps custom.
+DATABASE_ROUTERS = ['naviera_web.database_router.ExternalDBRouter']
 
 
 # Password validation
@@ -127,4 +136,10 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = str(MEDIA_ROOT)
+

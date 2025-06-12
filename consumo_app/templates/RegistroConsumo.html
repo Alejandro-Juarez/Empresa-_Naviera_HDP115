@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Consumo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .product-image {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+        .low-stock {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: #e0f7fa;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .flex-container {
+            display: flex;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .flex-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .flex-1 {
+            flex: 1;
+        }
+        .flex-2 {
+            flex: 2;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        /* Estilos para notificaciones */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 350px;
+        }
+        .notification {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.5s forwards;
+        }
+        .notification.error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .notification.success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+        .close-notification {
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .notification-bell {
+            position: relative;
+            display: inline-block;
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: 20px;
+        }
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h1>Registro de Consumo</h1>
+    </div>
+    
+    <div>
+        <label for="viaje-select"><strong>Viaje (Código):</strong></label>
+        <select id="viaje-select">
+            <option value="">Seleccione un viaje</option>
+            {% for viaje in viajes %}
+                <option value="{{ viaje.id_viaje }}">{{ viaje.codigo_viaje }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="flex-container">
+        <div class="flex-item flex-1">
+            <h3>Detalles del Consumo</h3>
+            
+            <div>
+                <label for="categoria"><strong>Categoría:</strong></label>
+                <input type="text" id="categoria" class="form-control" readonly>
+            </div>
+            
+            <div>
+                <label for="producto"><strong>Producto:</strong></label>
+                <input type="text" id="producto" class="form-control" readonly>
+            </div>
+            
+            <div>
+                <label for="cantidad"><strong>Cantidad a consumida:</strong></label>
+                <input type="number" id="cantidad" class="form-control">
+                <small id="cantidad-disponible" style="color: #100;"></small>
+            </div>
+            
+            <input type="hidden" id="inventario-id">
+            
+            <button id="registrar" class="btn-primary">
+                Registrar Consumo
+            </button>
+            <div id="mensaje" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="flex-item flex-2">
+            <h3>Inventario del Viaje Seleccionado</h3>
+            <div style="overflow-x: auto;">
+                <table id="tabla-inventario">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Nivel Mínimo</th>
+                            <th>Foto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Seleccione un viaje para ver el inventario</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor para notificaciones -->
+    <div class="notification-container" id="notification-container"></div>
+
+    <script>
+    $(document).ready(function() {
+        // Al seleccionar un viaje, cargar inventario
+        $('#viaje-select').change(function() {
+            const idViaje = $(this).val();
+            const tabla = $('#tabla-inventario tbody');
+            
+            // Limpiar campos del formulario
+            $('#categoria').val('');
+            $('#producto').val('');
+            $('#cantidad').val('1');
+            $('#inventario-id').val('');
+            $('#cantidad-disponible').text('');
+            $('#mensaje').text('').removeClass('error success');
+            
+            if (!idViaje) {
+                tabla.html('<tr><td colspan="5" style="text-align: center;">Seleccione un viaje para ver el inventario</td></tr>');
+                return;
+            }
+            
+            tabla.html('<tr><td colspan="5" style="text-align: center;">Cargando inventario...</td></tr>');
+            
+            $.ajax({
+                url: `/consumo/obtener_inventario/${idViaje}/`,
+                method: 'GET',
+                success: function(data) {
+                    if (data.error) {
+                        tabla.html(`<tr><td colspan="5" class="error">Error: ${data.error}</td></tr>`);
+                        return;
+                    }
+                    
+                    if (data.inventario.length === 0) {
+                        tabla.html('<tr><td colspan="5" style="text-align: center;">No hay inventario registrado para este viaje</td></tr>');
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.inventario.forEach(item => {
+                        const bajoStock = item.cantidad <= item.nivel_minimo;
+                        html += `
+                        <tr data-id="${item.id}" 
+                            data-categoria="${item.categoria}" 
+                            data-producto="${item.producto}"
+                            data-cantidad="${item.cantidad}">
+                            <td>${item.categoria}</td>
+                            <td>${item.producto}</td>
+                            <td class="${bajoStock ? 'low-stock' : ''}">${item.cantidad}</td>
+                            <td>${item.nivel_minimo}</td>
+                            <td><img src="${item.foto}" class="product-image" alt="${item.producto}"></td>
+                        </tr>`;
+                    });
+                    
+                    tabla.html(html);
+                },
+                error: function(xhr) {
+                    console.error("Error al cargar inventario:", xhr.responseText);
+                    tabla.html('<tr><td colspan="5" class="error">Error al cargar el inventario</td></tr>');
+                }
+            });
+        });
+        
+        // Al seleccionar un producto de la tabla
+        $('#tabla-inventario').on('click', 'tr[data-id]', function() {
+            // Resaltar fila seleccionada
+            $('#tabla-inventario tr').removeClass('selected');
+            $(this).addClass('selected');
+            
+            // Obtener datos de la fila
+            const categoria = $(this).data('categoria');
+            const producto = $(this).data('producto');
+            const inventarioId = $(this).data('id');
+            const cantidadDisponible = $(this).data('cantidad');
+            const nivelMinimo = $(this).find('td:nth-child(4)').text();
+            
+            // Actualizar formulario
+            $('#categoria').val(categoria);
+            $('#producto').val(producto);
+            $('#inventario-id').val(inventarioId);
+            $('#cantidad').attr('max', cantidadDisponible);
+            $('#cantidad-disponible').text(`Disponible: ${cantidadDisponible} (Mínimo: ${nivelMinimo})`);
+            
+            // Ajustar cantidad si es mayor al disponible
+            if (parseInt($('#cantidad').val()) > cantidadDisponible) {
+                $('#cantidad').val(cantidadDisponible);
+            }
+            
+            // Mostrar notificación si está bajo el mínimo
+            if (cantidadDisponible <= nivelMinimo) {
+                showNotification(`¡Atención! ${producto} está bajo el nivel mínimo (${cantidadDisponible}/${nivelMinimo})`, 'error');
+            }
+        });
+        
+        // Al registrar consumo
+        $('#registrar').click(function() {
+            const inventarioId = $('#inventario-id').val();
+            const cantidad = parseInt($('#cantidad').val());
+            const mensaje = $('#mensaje');
+            
+            // Validaciones
+            if (!inventarioId) {
+                mensaje.text('Debe seleccionar un producto del inventario').addClass('error');
+                return;
+            }
+            
+            if (isNaN(cantidad) || cantidad <= 0) {
+                mensaje.text('La cantidad debe ser un número positivo').addClass('error');
+                return;
+            }
+            
+            const maxCantidad = parseInt($('#cantidad').attr('max'));
+            if (cantidad > maxCantidad) {
+                mensaje.text(`No puede consumir más de ${maxCantidad} unidades`).addClass('error');
+                return;
+            }
+            
+            if (!confirm(`¿Confirmar consumo de ${cantidad} unidades?`)) {
+                return;
+            }
+            
+            // Enviar datos al servidor
+            $.ajax({
+                url: '/consumo/registrar_consumo/',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    inventario_id: inventarioId,
+                    cantidad: cantidad
+                }),
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                success: function(response) {
+                    if (response.error) {
+                        mensaje.text('Error: ' + response.error).addClass('error');
+                        showNotification('Error al registrar consumo: ' + response.error, 'error');
+                        return;
+                    }
+                    
+                    mensaje.text('Consumo registrado correctamente').addClass('success');
+                    showNotification('Consumo registrado correctamente', 'success');
+                    
+                    // Verificar si el stock quedó bajo el mínimo
+                    const nuevoStock = response.nuevo_stock;
+                    const nivelMinimo = $('#tabla-inventario tr.selected td:nth-child(4)').text();
+                    
+                    if (nuevoStock <= nivelMinimo) {
+                        const producto = $('#producto').val();
+                        showNotification(`¡Atención! ${producto} ha quedado bajo el nivel mínimo (${nuevoStock}/${nivelMinimo})`, 'error');
+                    }
+                    
+                    // Actualizar la tabla
+                    const idViaje = $('#viaje-select').val();
+                    if (idViaje) {
+                        $('#viaje-select').trigger('change');
+                    }
+                    
+                    // Limpiar campos (excepto cantidad)
+                    $('#categoria').val('');
+                    $('#producto').val('');
+                    $('#inventario-id').val('');
+                    $('#cantidad-disponible').text('');
+                },
+                error: function(xhr) {
+                    console.error("Error al registrar consumo:", xhr.responseText);
+                    mensaje.text('Error al registrar el consumo. Consulte la consola.').addClass('error');
+                    showNotification('Error al registrar el consumo', 'error');
+                }
+            });
+        });
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const notification = $(`
+                <div class="notification ${type}">
+                    <span>${message}</span>
+                    <span class="close-notification">&times;</span>
+                </div>
+            `);
+            
+            $('#notification-container').append(notification);
+            
+            
+            // Cerrar manualmente
+            notification.find('.close-notification').click(function() {
+                notification.fadeOut(500, function() {
+                    $(this).remove();
+                });
+            });
+        }
+        
+        // Actualizar contador de alertas
+        function updateAlertCount() {
+            // Aquí podrías hacer una llamada AJAX para obtener alertas no leídas
+            // Por ahora simulamos con un número aleatorio para demostración
+            const randomCount = Math.floor(Math.random() * 5);
+            $('#contador-alertas').text(randomCount);
+        }
+        
+        // Mostrar alertas al hacer clic en la campana
+        $('#campana-notificaciones').click(function() {
+            // Aquí podrías mostrar un listado de alertas históricas
+            showNotification('Esta sería la lista de alertas históricas', 'info');
+        });
+        
+        // Inicializar contador
+        updateAlertCount();
+    });
+    </script>
+</body>
+</html>
