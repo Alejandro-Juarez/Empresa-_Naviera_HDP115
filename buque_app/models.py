@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models # Esta es la única importación necesaria aquí para definir modelos
 
 class TipoBuque(models.Model):
     # ID_TIPO en DB, ahora mapeado a 'id_tipo' en minúsculas
@@ -8,7 +8,7 @@ class TipoBuque(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tipo_buque' # Ya estaba en minúsculas
+        db_table = 'tipo_buque'
         verbose_name = "Tipo de Buque"
         verbose_name_plural = "Tipos de Buque"
 
@@ -29,7 +29,7 @@ class Buque(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'buque' # Ya estaba en minúsculas
+        db_table = 'buque'
         verbose_name = "Buque"
         verbose_name_plural = "Buques"
         ordering = ['nombre']
